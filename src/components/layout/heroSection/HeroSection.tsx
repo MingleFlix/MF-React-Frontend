@@ -1,0 +1,25 @@
+import React from 'react';
+import heroImage from '../../../assets/hero.webp';
+import { Heading, Text } from '../../typography';
+
+const HeroSection: React.FC = () => {
+  return (
+    <div className='relative text-center p-20 bg-gray-800 text-white overflow-hidden'>
+      <img
+        src={heroImage}
+        alt='Descriptive Alt Text'
+        className='absolute inset-0 w-full h-full object-cover z-0'
+      />
+      <div className='absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75 z-10'></div>
+      <div className='relative z-20'>
+        <Heading>Watch Videos Together</Heading>
+        <Text>Create your room, invite friends, and watch videos in sync.</Text>
+        <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+          Get Started
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default HeroSection;
