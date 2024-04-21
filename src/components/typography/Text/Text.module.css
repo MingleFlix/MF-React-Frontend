@@ -1,0 +1,23 @@
+.body {
+  @apply text-sm font-normal leading-6;
+}
+
+.input {
+  @apply text-sm text-foreground;
+}
+
+.link {
+  @apply text-sm font-semibold leading-5 text-primary hover:text-primary/80 hover:underline;
+}
+
+.sub {
+  @apply text-xs text-muted-foreground;
+}
+
+.description {
+  @apply text-sm font-normal leading-4 pb-[1px] text-muted-foreground;
+}
+
+.error {
+  @apply text-sm font-normal italic leading-4 text-destructive;
+}
