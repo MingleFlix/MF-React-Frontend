@@ -1,8 +1,17 @@
 import React from 'react';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 interface FormData {
   email: string;
   password: string;
+}
+
+interface AuthResponseData {
+  email: string;
+  exp: number;
+  iat: number;
+  userId: string;
 }
 
 export function Login() {
@@ -23,7 +32,7 @@ export function Login() {
     event.preventDefault();
 
     try {
-      const response = await fetch('mf-user-management-service:3000/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,6 +43,21 @@ export function Login() {
       if (!response.ok) {
         throw new Error('Failed to login');
       }
+
+      // The response is a readable stream, therefore we have to wait
+      const responseBody = await response.json();
+
+      // Throws InvalidTokenError, this way we check if it is even a valid token
+      const decodedToken = jwtDecode(responseBody.token) as AuthResponseData;
+
+      // Convert cookie expire (*1000 as the unixtimestamp needs to be in ms)
+      const expireDate = new Date(decodedToken.exp * 1000);
+
+      // Save into cookie
+      Cookies.set('authtoken', responseBody.token, {
+        expires: expireDate,
+        secure: false, // For now insecure
+      });
 
       // Clear form fields on successful login
       setFormData({
