@@ -12,3 +12,5 @@ service:
 
 imagePullSecrets:
   - name: ghcr-io-secret
+nameOverride: ""
+fullnameOverride: ""
