@@ -17,3 +17,10 @@ imagePullSecrets:
   - name: ghcr-io-secret
 nameOverride: ""
 fullnameOverride: ""
+
+ingress:
+  enabled: true
+  annotations: {}
+  hostname: mingleflix.jesseguenzl.com
+  tls: false
+  tlsSecret: react-frontend-tls
