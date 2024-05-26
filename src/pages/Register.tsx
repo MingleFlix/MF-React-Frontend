@@ -25,7 +25,7 @@ export function Register() {
     event.preventDefault();
 
     try {
-      const response = await fetch('mf-user-management-service:3000/register', {
+      const response = await fetch('api/user-management/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

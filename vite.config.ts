@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       '/api/user-management': {
         target: 'http://localhost:3000',
+        rewrite: path => path.replace(/^\/api\/user-management/, ''),
         changeOrigin: true,
         secure: false,
       },
