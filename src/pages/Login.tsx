@@ -1,6 +1,6 @@
-import React from 'react';
-import Cookies from 'js-cookie';
+import React, { useContext } from 'react';
 import { jwtDecode } from 'jwt-decode';
+import { AuthContext } from '@/context/AuthContext.tsx';
 
 interface FormData {
   email: string;
@@ -15,6 +15,7 @@ interface AuthResponseData {
 }
 
 export function Login() {
+  const authContext = useContext(AuthContext);
   const [formData, setFormData] = React.useState<FormData>({
     email: '',
     password: '',
@@ -27,6 +28,11 @@ export function Login() {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
   };
+
+  if (!authContext) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  const { login } = authContext;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,18 +53,14 @@ export function Login() {
       // The response is a readable stream, therefore we have to wait
       const responseBody = await response.json();
 
+      const token = responseBody.token;
       // Throws InvalidTokenError, this way we check if it is even a valid token
-      const decodedToken = jwtDecode(responseBody.token) as AuthResponseData;
+      const decodedToken = jwtDecode(token) as AuthResponseData;
 
       // Convert cookie expire (*1000 as the unixtimestamp needs to be in ms)
       const expireDate = new Date(decodedToken.exp * 1000);
 
-      // Save into cookie
-      Cookies.set('authtoken', responseBody.token, {
-        expires: expireDate,
-        secure: false, // For now insecure
-      });
-
+      login(token, decodedToken.userId, expireDate);
       // Clear form fields on successful login
       setFormData({
         email: '',

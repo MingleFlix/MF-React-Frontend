@@ -1,21 +1,14 @@
 import './App.css';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import Header from './components/common/Header/Header.tsx';
-import { HomePage } from './pages/HomePage.tsx';
-import { Login } from './pages/Login.tsx';
-import { Register } from './pages/Register.tsx';
+import { AuthProvider } from '@/context/AuthContext.tsx';
 
 function App() {
   return (
-    <Router>
+    <AuthProvider>
       <Header />
-      <Routes>
-        <Route path='/' element={<HomePage />} />
-        {/*<Route path="/about" element={<About />} />*/}
-        <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-      </Routes>
-    </Router>
+      <Outlet />
+    </AuthProvider>
   );
 }
 
