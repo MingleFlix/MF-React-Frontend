@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "my-react-app.fullname" . }}
+  name: {{ include "react-frontend.fullname" . }}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
   {{- with .Values.ingress.annotations }}
@@ -22,6 +22,6 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: {{ include "my-react-app.fullname" . }}
+                name: {{ include "react-frontend.fullname" . }}
                 port:
                   number: 80
