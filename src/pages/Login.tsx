@@ -32,7 +32,7 @@ export function Login() {
     event.preventDefault();
 
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/user-management/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
