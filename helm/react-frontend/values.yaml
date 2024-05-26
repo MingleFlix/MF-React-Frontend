@@ -1,4 +1,5 @@
 replicaCount: 1
+revisionHistoryLimit: 3
 
 image:
   repository: ghcr.io/mingleflix/reactfrontend
@@ -9,6 +10,8 @@ image:
 service:
   type: LoadBalancer
   port: 80
+
+containerPort: 3000
 
 imagePullSecrets:
   - name: ghcr-io-secret

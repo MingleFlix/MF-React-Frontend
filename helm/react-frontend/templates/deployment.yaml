@@ -14,10 +14,12 @@ spec:
       labels:
         {{- include "react-frontend.selectorLabels" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
-            - name: http
-              containerPort: 3000
-              protocol: TCP
+            - containerPort: {{ .Values.containerPort }}
