@@ -7,6 +7,7 @@ import ErrorPage from '@/error-page.tsx';
 import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
+import { WatchPage } from '@/pages/WatchPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: 'register',
         element: <Register />,
+      },
+      {
+        path: 'watch',
+        element: <WatchPage />,
       },
     ],
   },
