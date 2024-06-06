@@ -2,7 +2,7 @@ import HeroSection from '../components/layout/heroSection/HeroSection.tsx';
 
 export function HomePage() {
   return (
-    <div>
+    <div className='pt-[65px]'>
       <HeroSection />
       <section id='about' style={{ padding: '20px 50px' }}>
         <h2>About MingleFlix</h2>

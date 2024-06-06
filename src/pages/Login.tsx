@@ -76,10 +76,10 @@ export function Login() {
   };
 
   return (
-    <div className='p-4 bg-neutral-900'>
+    <div className='bg-neutral-900'>
       <section className='h-screen'>
-        <div className='container h-full px-6'>
-          <div className='flex h-full flex-wrap items-center content-center justify-center'>
+        <div className='container h-[90vh] px-6 pt-[65px]'>
+          <div className='flex h-[90%] flex-wrap content-center justify-center'>
             <div className='md:w-8/12 lg:ms-6 lg:w-[450px]'>
               <form
                 className='p-10 bg-[#292929] rounded-lg'

@@ -12,7 +12,7 @@ const Header: React.FC = () => {
   const { auth } = authContext;
 
   return (
-    <header className='flex text-white bg-[#292929] justify-between items-center p-3 border-b-[1px] border-sky-600'>
+    <header className='flex fixed w-full text-white bg-[#292929] justify-between items-center p-3 border-b-[1px] border-sky-600'>
       <h1 className='font-medium text-4xl'>
         <Link className='text-white' to='/'>
           MingleFlix
