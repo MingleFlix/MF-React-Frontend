@@ -23,6 +23,32 @@ const PlyrVideoPlayer: React.FC<PlayerComponentProps> = ({ source }) => {
     });
 
     player.source = source as Plyr.SourceInfo;
+
+    // Event Listener for play event
+    player.on('play', () => {
+      var currentTime = player.currentTime;
+      console.log('Video started at ' + currentTime);
+    });
+
+    // Event Listener for pause event
+    player.on('pause', () => {
+      var currentTime = player.currentTime;
+      console.log('Video stopped at ' + currentTime);
+    });
+
+    // Event Listener for seeked event
+    player.on('seeked', () => {
+      var currentTime = player.currentTime;
+      console.log('Video seeked to ' + currentTime);
+    });
+
+    // Event Listener for timeupdate event
+    // Not sure if we want to send this data to the websocket,
+    // as it will cause a lot of network traffic
+    // player.on('timeupdate', () => {
+    //   var currentTime = player.currentTime;
+    //   console.log('Video currently at ' + currentTime);
+    // });
     
   }, [source]);
 
