@@ -71,6 +71,15 @@ button:focus-visible {
   }
 }
 
+/* Player Rounding */
 .plyr {
   border-radius: 15px;
+}
+
+/* Player Ambient */
+.decoy {
+  position: absolute;
+  filter: blur(90px);
+  -webkit-filter: blur(90px);
+  z-index: 0;
 }
