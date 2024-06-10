@@ -50,7 +50,6 @@ export const Text: FunctionComponent<TextProps> = ({
     sub: 'p',
   };
 
-  // @ts-expect-error variant is always defined
   const Component:
     | JSXElementConstructor<any>
     | React.ReactElement<any>
@@ -58,7 +57,6 @@ export const Text: FunctionComponent<TextProps> = ({
     | string = component || componentsMap![variant!];
 
   return (
-    // @ts-expect-error Component is always defined
     <Component
       className={cn(
         s.root,
