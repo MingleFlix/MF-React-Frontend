@@ -24,23 +24,21 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = Cookies.get('auth_token');
     const role = Cookies.get('auth_role');
+    console.log(token, role);
     if (token && role) {
       setAuth({ token, role });
     }
   }, []);
 
-  const login = (token: string, role: string, expireDate: Date) => {
-    // Save into cookie
-    Cookies.set('authtoken', token, {
-      expires: expireDate,
-      secure: false, // For now insecure
-    });
-
+  const login = (token: string, role: string) => {
+    Cookies.set('auth_token', token);
+    Cookies.set('auth_role', role);
     setAuth({ token, role });
   };
 
   const logout = () => {
-    Cookies.remove('authtoken');
+    Cookies.remove('auth_token');
+    Cookies.remove('auth_role');
     setAuth(null);
   };
 
