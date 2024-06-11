@@ -6,6 +6,7 @@ metadata:
     {{- include "react-frontend.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "react-frontend.selectorLabels" . | nindent 6 }}
