@@ -13,6 +13,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api/room-management': {
+        target: 'http://localhost:3001',
+        rewrite: path => path.replace(/^\/api\/room-management/, ''),
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   plugins: [react()],
