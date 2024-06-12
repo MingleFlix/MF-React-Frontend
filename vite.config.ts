@@ -19,6 +19,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api/queue-management': {
+        target: 'http://localhost:3002',
+        rewrite: path => path.replace(/^\/api\/queue-management/, ''),
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   plugins: [react()],
