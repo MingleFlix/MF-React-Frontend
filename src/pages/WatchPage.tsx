@@ -3,6 +3,7 @@ import PlayerComponent from '../components/video/PlayerComponent';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
 import AddVideoInput from '@/components/video/AddVideoInput';
+import VideoQueueComponent from '@/components/video/VideoQueueComponent';
 
 export function WatchPage() {
   const authContext = useContext(AuthContext);
@@ -65,9 +66,16 @@ export function WatchPage() {
 
   return (
     <section id='about' className='h-[95vh]' style={{ padding: '20px 50px' }}>
-      <div className='container h-[90vh] px-6 pt-[65px]'>
-        <AddVideoInput></AddVideoInput>
-        <PlayerComponent></PlayerComponent>
+      <div className='h-[90vh] pt-[65px]'>
+        <div className='flex flex-col xl:flex-row justify-center'>
+          <div className='pt-2 space-y-6 max-w-[100%] xl:max-w-[90%] 2xl:max-w-[70%]'>
+            <AddVideoInput></AddVideoInput>
+            <PlayerComponent></PlayerComponent>
+          </div>
+          <div className='flex flex-col'>
+            <VideoQueueComponent></VideoQueueComponent>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -117,7 +117,7 @@ const PlyrVideoPlayer: React.FC = () => {
   // To-Do: Add Websocket
 
   return (
-    <div>
+    <div className='relative z-[1]'>
       <canvas ref={canvasRef} className='decoy'></canvas>
       <video ref={videoRef} className='plyr-react plyr' playsInline />
     </div>
