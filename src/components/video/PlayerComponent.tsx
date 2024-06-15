@@ -2,30 +2,25 @@ import React, { useRef, useEffect } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 
-interface PlayerComponentProps {
-  source: {
-    type: string;
-    sources: {
-      src: string;
-      type: string;
-      size?: number;
-    }[];
-  };
-}
-
-const PlyrVideoPlayer: React.FC<PlayerComponentProps> = ({ source }) => {
+const PlyrVideoPlayer: React.FC = () => {
   // Toggle player ambient mode
   var ambientMode = true;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const setCanvasDimension = (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
+  const setCanvasDimension = (
+    canvas: HTMLCanvasElement,
+    video: HTMLVideoElement,
+  ) => {
     canvas.height = video.offsetHeight;
     canvas.width = video.offsetWidth;
   };
 
-  const paintStaticVideo = (ctx: CanvasRenderingContext2D, video: HTMLVideoElement) => {
+  const paintStaticVideo = (
+    ctx: CanvasRenderingContext2D,
+    video: HTMLVideoElement,
+  ) => {
     if (!ambientMode) {
       return;
     }
@@ -35,11 +30,29 @@ const PlyrVideoPlayer: React.FC<PlayerComponentProps> = ({ source }) => {
   useEffect(() => {
     // Init Player
     const player = new Plyr(videoRef.current!, {
-      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen']
+      controls: [
+        'play',
+        'progress',
+        'current-time',
+        'mute',
+        'volume',
+        'fullscreen',
+      ],
     });
 
+    const videoSource = {
+      type: 'video',
+      sources: [
+        {
+          src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+          type: 'video/mp4',
+          size: 1080,
+        },
+      ],
+    };
+
     // Set Player video source
-    player.source = source as Plyr.SourceInfo;
+    player.source = videoSource as Plyr.SourceInfo;
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -74,7 +87,7 @@ const PlyrVideoPlayer: React.FC<PlayerComponentProps> = ({ source }) => {
           setTimeout(loop, 24000 / 1001); // drawing at 23.976fps
         }
       })();
-      
+
       var currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
     });
@@ -99,13 +112,14 @@ const PlyrVideoPlayer: React.FC<PlayerComponentProps> = ({ source }) => {
     //   var currentTime = player.currentTime;
     //   console.log('Video currently at ' + currentTime);
     // });
-    
-  }, [source]);
+  });
+
+  // To-Do: Add Websocket
 
   return (
     <div>
-      <canvas ref={canvasRef} className="decoy"></canvas>
-      <video ref={videoRef} className="plyr-react plyr" playsInline />
+      <canvas ref={canvasRef} className='decoy'></canvas>
+      <video ref={videoRef} className='plyr-react plyr' playsInline />
     </div>
   );
 };
