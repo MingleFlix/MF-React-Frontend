@@ -29,6 +29,12 @@ const PlyrVideoPlayer: React.FC = () => {
   };
 
   const initPlayer = (source: string) => {
+    // Destroy old Player instance
+    // React has some weird side effects
+    if (player != null) {
+      player.destroy();
+    }
+
     // Init Player
     player = new Plyr(document.getElementById('player'), {
       controls: [
