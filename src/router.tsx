@@ -5,6 +5,7 @@ import { HomePage } from '@/pages/HomePage.tsx';
 import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
 import RoomPage, { loader as roomLoader } from '@/pages/Room/RoomPage.tsx';
+import Dev from '@/pages/Dev.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ export const router = createBrowserRouter([
         path: 'room/:roomId',
         element: <RoomPage />,
         loader: roomLoader,
+      },
+      {
+        path: 'dev',
+        element: <Dev />,
       },
     ],
   },
