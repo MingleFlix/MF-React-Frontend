@@ -1,11 +1,29 @@
 // src/context/AuthContext.tsx
 import { createContext, FC, ReactNode, useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 interface AuthContextType {
-  auth: { token: string; role: string } | null;
-  login: (token: string, role: string, expireDate: Date) => void;
+  auth: AuthData | null;
+  login: (token: string) => void;
   logout: () => void;
+}
+
+interface AuthData {
+  token: string;
+  role: string;
+  username: string;
+  userId: string;
+  email: string;
+}
+
+interface AuthResponseData {
+  email: string;
+  exp: number;
+  iat: number;
+  userId: string;
+  username: string;
+  role: string;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -17,28 +35,38 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
-  const [auth, setAuth] = useState<{ token: string; role: string } | null>(
-    null,
-  );
+  const [auth, setAuth] = useState<AuthData | null>(null);
 
   useEffect(() => {
     const token = Cookies.get('auth_token');
-    const role = Cookies.get('auth_role');
+
     // console.log(token, role);
-    if (token && role) {
-      setAuth({ token, role });
+    if (token) {
+      extractAndSetAuth(token);
     }
   }, []);
 
-  const login = (token: string, role: string) => {
+  function extractAndSetAuth(token: string) {
+    try {
+      // Throws InvalidTokenError, this way we check if it is even a valid token
+      const decodedToken = decodeToken(token);
+      const { email, userId, username, role } = decodedToken;
+
+      setAuth({ token, userId, email, username, role });
+    } catch (error) {
+      console.error('Invalid token');
+      setAuth(null);
+    }
+  }
+
+  const login = (token: string) => {
     Cookies.set('auth_token', token);
-    Cookies.set('auth_role', role);
-    setAuth({ token, role });
+
+    extractAndSetAuth(token);
   };
 
   const logout = () => {
     Cookies.remove('auth_token');
-    Cookies.remove('auth_role');
     setAuth(null);
   };
 
@@ -47,4 +75,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+const decodeToken = (token: string) => {
+  try {
+    return jwtDecode(token) as AuthResponseData;
+  } catch (error) {
+    return null;
+  }
 };

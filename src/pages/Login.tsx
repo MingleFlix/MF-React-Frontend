@@ -1,17 +1,9 @@
 import React, { useContext } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { AuthContext } from '@/context/AuthContext.tsx';
 
 interface FormData {
   email: string;
   password: string;
-}
-
-interface AuthResponseData {
-  email: string;
-  exp: number;
-  iat: number;
-  userId: string;
 }
 
 export function Login() {
@@ -54,13 +46,8 @@ export function Login() {
       const responseBody = await response.json();
 
       const token = responseBody.token;
-      // Throws InvalidTokenError, this way we check if it is even a valid token
-      const decodedToken = jwtDecode(token) as AuthResponseData;
 
-      // Convert cookie expire (*1000 as the unixtimestamp needs to be in ms)
-      const expireDate = new Date(decodedToken.exp * 1000);
-
-      login(token, decodedToken.userId, expireDate);
+      login(token);
       // Clear form fields on successful login
       setFormData({
         email: '',
