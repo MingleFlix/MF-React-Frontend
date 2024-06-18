@@ -3,6 +3,10 @@ import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 
 const PlyrVideoPlayer: React.FC = () => {
+  // Temp for development
+  const user = (Math.random() + 1).toString(36).substring(7);
+  let sendEvent = true;
+
   // Toggle player ambient mode
   const ambientMode = true;
   var player = null;
@@ -98,7 +102,11 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
 
-      ws.current?.send(JSON.stringify({ event: 'play', time: currentTime }));
+      if (sendEvent) {
+        ws.current?.send(
+          JSON.stringify({ event: 'play', time: currentTime, user: user }),
+        );
+      }
     });
 
     // Event Listener for pause event
@@ -106,7 +114,11 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video stopped at ' + currentTime);
 
-      ws.current?.send(JSON.stringify({ event: 'pause', time: currentTime }));
+      if (sendEvent) {
+        ws.current?.send(
+          JSON.stringify({ event: 'pause', time: currentTime, user: user }),
+        );
+      }
     });
 
     // Event Listener for seeked event
@@ -114,7 +126,12 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video seeked to ' + currentTime);
       paintStaticVideo(ctx!, video);
-      ws.current?.send(JSON.stringify({ event: 'seeked', time: currentTime }));
+
+      if (sendEvent) {
+        ws.current?.send(
+          JSON.stringify({ event: 'seeked', time: currentTime, user: user }),
+        );
+      }
     });
   };
 
@@ -145,6 +162,36 @@ const PlyrVideoPlayer: React.FC = () => {
         // Re-init Player with new video url
         initPlayer(message.url);
       }
+
+      if (message.event == 'play' && message.user != user) {
+        console.log('Received Play Event');
+        sendEvent = false;
+        player.currentTime = message.time;
+        player.play();
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
+      }
+
+      if (message.event == 'pause' && message.user != user) {
+        console.log('Received Pause Event');
+        sendEvent = false;
+        player.currentTime = message.time;
+        player.pause();
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
+      }
+
+      if (message.event == 'seeked' && message.user != user) {
+        console.log('Received Seeked Event');
+        sendEvent = false;
+        player.currentTime = message.time;
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
+      }
+
       console.log('WebSocket Server Message: ' + event.data);
     };
 
