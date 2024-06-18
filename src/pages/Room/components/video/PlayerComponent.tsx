@@ -9,7 +9,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
   // Toggle player ambient mode
   const ambientMode = true;
-  var player = null;
+  let player = null;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ws = useRef<WebSocket | null>(null);
@@ -152,8 +152,6 @@ const PlyrVideoPlayer: React.FC = () => {
       const message = JSON.parse(event.data);
 
       if (message.event == 'add-video') {
-        console.log('Now Playing: ' + message.url);
-
         // Destroy old Player instance
         if (player != null) {
           player.destroy();
@@ -161,6 +159,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
         // Re-init Player with new video url
         initPlayer(message.url);
+        console.log('Now Playing: ' + message.url);
       }
 
       if (message.event == 'play' && message.user != user) {

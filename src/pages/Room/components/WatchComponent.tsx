@@ -1,14 +1,14 @@
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import PlayerComponent from '../components/video/PlayerComponent';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import PlayerComponent from './video/PlayerComponent';
 import { useContext, useEffect } from 'react';
 import { AuthContext } from '@/context/AuthContext';
-import AddVideoInput from '@/components/video/AddVideoInput';
-import VideoQueueComponent from '@/components/video/VideoQueueComponent';
+import AddVideoInput from './video/AddVideoInput';
+import VideoQueueComponent from './video/VideoQueueComponent';
 
-export function WatchPage() {
+export function WatchComponent() {
   const authContext = useContext(AuthContext);
   const [searchParams] = useSearchParams();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const loadRoom = async (roomId: string, token: string) => {
     try {
@@ -44,7 +44,9 @@ export function WatchPage() {
 
       // To-Do: Display Queue Items
       // To-Do: Load Player with first item
-    } catch (error: any) {}
+    } catch (error: any) {
+      console.log(error.message);
+    }
   };
 
   useEffect(() => {

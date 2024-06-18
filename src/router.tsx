@@ -4,8 +4,7 @@ import ErrorPage from '@/error-page.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
 import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
-import { WatchPage } from '@/pages/WatchPage.tsx';
-import RoomPage, { loader as roomLoader } from '@/pages/RoomPage.tsx';
+import RoomPage, { loader as roomLoader } from '@/pages/Room/RoomPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -24,10 +23,6 @@ export const router = createBrowserRouter([
       {
         path: 'register',
         element: <Register />,
-      },
-      {
-        path: 'watch',
-        element: <WatchPage />,
       },
       {
         path: 'room/:roomId',
