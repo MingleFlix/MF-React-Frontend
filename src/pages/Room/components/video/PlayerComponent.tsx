@@ -3,15 +3,31 @@ import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 
 const PlyrVideoPlayer: React.FC = () => {
-  // Temp for development
+  // =========================
+  // To-Do: Use actual room id
+  const ROOM_ID = 1;
+  // To-Do: Get actual user from auth context
   const user = (Math.random() + 1).toString(36).substring(7);
+  // =========================
+
+  // We have to block sending events,
+  // because receiving player events causing it to send events
+  // resulting in an endless loop of events being broadcasted
   let sendEvent = true;
 
   // Toggle player ambient mode
+  // To-Do: Add option inside the player
   const ambientMode = true;
+
+  // We don't want to re-render the react player component
+  // as it results in many unwanted side effects
+  // So we use the same player object and properly destroy it (see initPlayer())
   let player = null;
 
+  // canvas used for ambient mode
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // WebSocket
   const ws = useRef<WebSocket | null>(null);
 
   const setCanvasDimension = (
@@ -136,8 +152,17 @@ const PlyrVideoPlayer: React.FC = () => {
   };
 
   useEffect(() => {
+    // Create URL used for websocket
+    var webSocketUrl = new URL(
+      `/api/queue-management/sync/${ROOM_ID}`,
+      window.location.href,
+    );
+
+    // Need to switch protocol
+    webSocketUrl.protocol = webSocketUrl.protocol.replace('http', 'ws');
+
     // Initialize WebSocket connection
-    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
+    ws.current = new WebSocket(webSocketUrl.href);
 
     ws.current.onopen = () => {
       console.log('WebSocket connection opened');

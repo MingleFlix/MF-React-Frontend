@@ -20,7 +20,7 @@ export default defineConfig({
         secure: false,
       },
       '/api/queue-management': {
-        target: 'http://localhost:3002',
+        target: 'ws://localhost:3002',
         rewrite: path => path.replace(/^\/api\/queue-management/, ''),
         changeOrigin: true,
         secure: false,

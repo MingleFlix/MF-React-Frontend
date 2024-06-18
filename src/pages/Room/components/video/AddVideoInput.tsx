@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const AddVideoInput: React.FC = () => {
+  // =========================
+  // To-Do: Use actual room id
+  const ROOM_ID = 1;
+  // =========================
+
   const [inputValue, setInputValue] = useState<string>('');
   const ws = useRef<WebSocket | null>(null);
 
@@ -9,8 +14,17 @@ const AddVideoInput: React.FC = () => {
   };
 
   useEffect(() => {
-    // Initialize the WebSocket connection
-    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
+    // Create URL used for websocket
+    var webSocketUrl = new URL(
+      `/api/queue-management/sync/${ROOM_ID}`,
+      window.location.href,
+    );
+
+    // Need to switch protocol
+    webSocketUrl.protocol = webSocketUrl.protocol.replace('http', 'ws');
+
+    // Initialize WebSocket connection
+    ws.current = new WebSocket(webSocketUrl.href);
 
     ws.current.onopen = () => {
       console.log('WebSocket connection opened');
