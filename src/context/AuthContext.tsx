@@ -24,7 +24,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = Cookies.get('auth_token');
     const role = Cookies.get('auth_role');
-    console.log(token, role);
+    // console.log(token, role);
     if (token && role) {
       setAuth({ token, role });
     }

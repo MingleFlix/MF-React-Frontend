@@ -6,7 +6,7 @@ interface QueueItem {
 }
 
 const VideoQueueComponent: React.FC = () => {
-  let queueItems: QueueItem[] = [];
+  const queueItems: QueueItem[] = [];
   queueItems.push({ user: 'Test', url: 'some random url' });
 
   return (
