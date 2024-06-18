@@ -7,6 +7,7 @@ import ErrorPage from '@/error-page.tsx';
 import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
+import RoomPage, { loader as roomLoader } from '@/pages/RoomPage.tsx';
 import { WatchPage } from '@/pages/WatchPage.tsx';
 
 const router = createBrowserRouter([
@@ -30,6 +31,11 @@ const router = createBrowserRouter([
       {
         path: 'watch',
         element: <WatchPage />,
+      },
+      {
+        path: 'room/:roomId',
+        element: <RoomPage />,
+        loader: roomLoader,
       },
     ],
   },

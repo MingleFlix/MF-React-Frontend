@@ -4,7 +4,7 @@ import 'plyr/dist/plyr.css';
 
 const PlyrVideoPlayer: React.FC = () => {
   // Toggle player ambient mode
-  var ambientMode = true;
+  const ambientMode = true;
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
