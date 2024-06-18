@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 
@@ -88,19 +88,19 @@ const PlyrVideoPlayer: React.FC = () => {
         }
       })();
 
-      var currentTime = player.currentTime;
+      const currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
     });
 
     // Event Listener for pause event
     player.on('pause', () => {
-      var currentTime = player.currentTime;
+      const currentTime = player.currentTime;
       console.log('Video stopped at ' + currentTime);
     });
 
     // Event Listener for seeked event
     player.on('seeked', () => {
-      var currentTime = player.currentTime;
+      const currentTime = player.currentTime;
       console.log('Video seeked to ' + currentTime);
       paintStaticVideo(ctx!, video);
     });
