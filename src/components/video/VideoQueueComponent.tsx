@@ -26,14 +26,12 @@ const VideoQueueComponent: React.FC = () => {
                     className='flex flex-row hover:bg-sky-800/30 bg-sky-800/10 rounded-lg px-4'
                     key={index}
                   >
-                    <div className='w-10 h-14 flex items-center text-black dark:text-white pl-1'>
+                    <div className='w-10 h-14 flex items-center text-white pl-1'>
                       <p>⮞</p>
                     </div>
                     <div className='basis-3/4 pl-2'>
-                      <p className='text-black dark:text-white text-sm font-bold'>
-                        {item.url}
-                      </p>
-                      <p className='text-black dark:text-white text-sm font-medium'>
+                      <p className='text-white text-sm font-bold'>{item.url}</p>
+                      <p className='text-white text-sm font-medium'>
                         added by {item.user}
                       </p>
                     </div>

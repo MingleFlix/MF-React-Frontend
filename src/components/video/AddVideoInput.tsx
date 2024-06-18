@@ -1,20 +1,41 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const AddVideoInput: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>('');
+  const ws = useRef<WebSocket | null>(null);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(event.target.value);
   };
+
+  useEffect(() => {
+    // Initialize the WebSocket connection
+    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
+
+    ws.current.onopen = () => {
+      console.log('WebSocket connection opened');
+    };
+
+    ws.current.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    ws.current.onerror = error => {
+      console.error('WebSocket error', error);
+    };
+  }, []);
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter') {
       return;
     }
 
-    console.log(inputValue);
-
-    // To-Do: Add Websocket
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ event: 'add-video', url: inputValue }));
+      console.log('Sent to WebSocket:', inputValue);
+    } else {
+      console.error('WebSocket is not open');
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const ws = useRef<WebSocket | null>(null);
 
   const setCanvasDimension = (
     canvas: HTMLCanvasElement,
@@ -28,6 +29,13 @@ const PlyrVideoPlayer: React.FC = () => {
   };
 
   useEffect(() => {
+    // Initialize WebSocket connection
+    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
+
+    ws.current.onopen = () => {
+      console.log('WebSocket connection opened');
+    };
+
     // Init Player
     const player = new Plyr(videoRef.current!, {
       controls: [
@@ -90,12 +98,16 @@ const PlyrVideoPlayer: React.FC = () => {
 
       const currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
+
+      ws.current?.send(JSON.stringify({ event: 'play', time: currentTime }));
     });
 
     // Event Listener for pause event
     player.on('pause', () => {
       const currentTime = player.currentTime;
       console.log('Video stopped at ' + currentTime);
+
+      ws.current?.send(JSON.stringify({ event: 'pause', time: currentTime }));
     });
 
     // Event Listener for seeked event
@@ -103,7 +115,12 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video seeked to ' + currentTime);
       paintStaticVideo(ctx!, video);
+      ws.current?.send(JSON.stringify({ event: 'seeked', time: currentTime }));
     });
+
+    ws.current.onmessage = event => {
+      console.log('WebSocket Server Message: ' + event.data);
+    };
 
     // Event Listener for timeupdate event
     // Not sure if we want to send this data to the websocket,
@@ -112,6 +129,14 @@ const PlyrVideoPlayer: React.FC = () => {
     //   var currentTime = player.currentTime;
     //   console.log('Video currently at ' + currentTime);
     // });
+
+    ws.current.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    ws.current.onerror = error => {
+      console.error('WebSocket error', error);
+    };
   });
 
   // To-Do: Add Websocket
