@@ -5,8 +5,8 @@ import 'plyr/dist/plyr.css';
 const PlyrVideoPlayer: React.FC = () => {
   // Toggle player ambient mode
   const ambientMode = true;
+  var player = null;
 
-  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ws = useRef<WebSocket | null>(null);
 
@@ -28,16 +28,9 @@ const PlyrVideoPlayer: React.FC = () => {
     ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
   };
 
-  useEffect(() => {
-    // Initialize WebSocket connection
-    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
-
-    ws.current.onopen = () => {
-      console.log('WebSocket connection opened');
-    };
-
+  const initPlayer = (source: string) => {
     // Init Player
-    const player = new Plyr(videoRef.current!, {
+    player = new Plyr(document.getElementById('player'), {
       controls: [
         'play',
         'progress',
@@ -52,7 +45,7 @@ const PlyrVideoPlayer: React.FC = () => {
       type: 'video',
       sources: [
         {
-          src: 'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+          src: source,
           type: 'video/mp4',
           size: 1080,
         },
@@ -117,8 +110,35 @@ const PlyrVideoPlayer: React.FC = () => {
       paintStaticVideo(ctx!, video);
       ws.current?.send(JSON.stringify({ event: 'seeked', time: currentTime }));
     });
+  };
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    ws.current = new WebSocket('ws://127.0.0.1:3003/video');
+
+    ws.current.onopen = () => {
+      console.log('WebSocket connection opened');
+    };
+
+    // Default video
+    initPlayer(
+      'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+    );
 
     ws.current.onmessage = event => {
+      const message = JSON.parse(event.data);
+
+      if (message.event == 'add-video') {
+        console.log('Now Playing: ' + message.url);
+
+        // Destroy old Player instance
+        if (player != null) {
+          player.destroy();
+        }
+
+        // Re-init Player with new video url
+        initPlayer(message.url);
+      }
       console.log('WebSocket Server Message: ' + event.data);
     };
 
@@ -139,12 +159,10 @@ const PlyrVideoPlayer: React.FC = () => {
     };
   });
 
-  // To-Do: Add Websocket
-
   return (
     <div className='relative z-[1]'>
       <canvas ref={canvasRef} className='decoy'></canvas>
-      <video ref={videoRef} className='plyr-react plyr' playsInline />
+      <video id='player' className='plyr-react plyr' playsInline />
     </div>
   );
 };
