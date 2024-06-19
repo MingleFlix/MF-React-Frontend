@@ -19,9 +19,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/api/queue-management': {
+      '/api/video-management': {
         target: 'ws://localhost:3002',
-        rewrite: path => path.replace(/^\/api\/queue-management/, ''),
+        rewrite: path => path.replace(/^\/api\/video-management/, ''),
         changeOrigin: true,
         secure: false,
       },
