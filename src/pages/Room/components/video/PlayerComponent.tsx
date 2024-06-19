@@ -244,4 +244,4 @@ const PlyrVideoPlayer: React.FC = () => {
   );
 };
 
-export default PlyrVideoPlayer;
+export default React.memo(PlyrVideoPlayer);
