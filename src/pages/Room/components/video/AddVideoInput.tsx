@@ -1,9 +1,10 @@
+import { PlayerEvent } from '@/types/events';
 import React, { useState, useEffect, useRef } from 'react';
 
 const AddVideoInput: React.FC = () => {
   // =========================
   // To-Do: Use actual room id
-  const ROOM_ID = 1;
+  const ROOM_ID = '1';
   // =========================
 
   const [inputValue, setInputValue] = useState<string>('');
@@ -16,7 +17,7 @@ const AddVideoInput: React.FC = () => {
   useEffect(() => {
     // Create URL used for websocket
     var webSocketUrl = new URL(
-      `/api/queue-management/sync/${ROOM_ID}`,
+      `/api/video-management?roomID=${ROOM_ID}&type=input`,
       window.location.href,
     );
 
@@ -45,7 +46,15 @@ const AddVideoInput: React.FC = () => {
     }
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ event: 'add-video', url: inputValue }));
+      const playerEvent: PlayerEvent = {
+        room: ROOM_ID,
+        event: 'add-video',
+        user: '',
+        time: '0',
+        url: inputValue,
+      };
+
+      ws.current.send(JSON.stringify(playerEvent));
       console.log('Sent to WebSocket:', inputValue);
     } else {
       console.error('WebSocket is not open');
