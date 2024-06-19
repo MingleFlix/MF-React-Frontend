@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
+import { PlayerEvent } from '@/types/events';
 
 const PlyrVideoPlayer: React.FC = () => {
   // =========================
   // To-Do: Use actual room id
-  const ROOM_ID = 1;
+  const ROOM_ID = '1';
   // To-Do: Get actual user from auth context
   const user = (Math.random() + 1).toString(36).substring(7);
   // =========================
@@ -14,6 +15,8 @@ const PlyrVideoPlayer: React.FC = () => {
   // because receiving player events causing it to send events
   // resulting in an endless loop of events being broadcasted
   let sendEvent = true;
+
+  let firstEvent: PlayerEvent = null;
 
   // Toggle player ambient mode
   // To-Do: Add option inside the player
@@ -48,7 +51,27 @@ const PlyrVideoPlayer: React.FC = () => {
     ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
   };
 
-  const initPlayer = (source: string) => {
+  const sendPlayerEventToServer = (
+    event: string,
+    time: string,
+    url: string,
+  ) => {
+    if (!sendEvent) {
+      return;
+    }
+
+    const eventToSend: PlayerEvent = {
+      room: ROOM_ID,
+      event: event,
+      user: user,
+      time: time,
+      url: url,
+    };
+
+    ws.current?.send(JSON.stringify(eventToSend));
+  };
+
+  const initPlayer = (source: string, time: string) => {
     // Destroy old Player instance
     // React has some weird side effects
     if (player != null) {
@@ -80,6 +103,8 @@ const PlyrVideoPlayer: React.FC = () => {
 
     // Set Player video source
     player.source = videoSource as Plyr.SourceInfo;
+
+    player.time = time;
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -118,11 +143,18 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
 
-      if (sendEvent) {
-        ws.current?.send(
-          JSON.stringify({ event: 'play', time: currentTime, user: user }),
-        );
+      if (firstEvent == null) {
+        sendPlayerEventToServer('play', currentTime, player.source);
+      } else {
+        player.currentTime = firstEvent.time;
+        if (firstEvent.event == 'sync-ack-play') {
+          player.play();
+        }
+        if (firstEvent.event == 'sync-ack-pause') {
+          player.pause();
+        }
       }
+      firstEvent = null;
     });
 
     // Event Listener for pause event
@@ -130,11 +162,7 @@ const PlyrVideoPlayer: React.FC = () => {
       const currentTime = player.currentTime;
       console.log('Video stopped at ' + currentTime);
 
-      if (sendEvent) {
-        ws.current?.send(
-          JSON.stringify({ event: 'pause', time: currentTime, user: user }),
-        );
-      }
+      sendPlayerEventToServer('pause', currentTime, player.source);
     });
 
     // Event Listener for seeked event
@@ -143,18 +171,14 @@ const PlyrVideoPlayer: React.FC = () => {
       console.log('Video seeked to ' + currentTime);
       paintStaticVideo(ctx!, video);
 
-      if (sendEvent) {
-        ws.current?.send(
-          JSON.stringify({ event: 'seeked', time: currentTime, user: user }),
-        );
-      }
+      sendPlayerEventToServer('seeked', currentTime, player.source);
     });
   };
 
   useEffect(() => {
     // Create URL used for websocket
     var webSocketUrl = new URL(
-      `/api/queue-management/sync/${ROOM_ID}`,
+      `/api/video-management?roomID=${ROOM_ID}&type=player`,
       window.location.href,
     );
 
@@ -166,57 +190,109 @@ const PlyrVideoPlayer: React.FC = () => {
 
     ws.current.onopen = () => {
       console.log('WebSocket connection opened');
+
+      // Sync request
+      sendPlayerEventToServer('sync', '0', null);
     };
 
     // Default video
-    initPlayer(
-      'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
-    );
+    // setTimeout(() => {
+    //   initPlayer(
+    //     'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+    //   );
+    // }, 200);
 
     ws.current.onmessage = event => {
-      const message = JSON.parse(event.data);
+      console.log('Received message', event);
+      const playerEvent = JSON.parse(event.data) as PlayerEvent;
 
-      if (message.event == 'add-video') {
+      // We try to prevent receiving our own events server-side
+      // However we want to make sure
+      if (playerEvent.user == user) {
+        console.log('Ignoring event');
+        return;
+      }
+
+      if (playerEvent.event === 'sync') {
+        // Other client asked to sync
+
+        if (player == null) {
+          // We can't respond to that request
+          return;
+        }
+
+        if (player.playing) {
+          console.log('Sending sync-ack play');
+          sendPlayerEventToServer(
+            'sync-ack-play',
+            player.currentTime,
+            player.source,
+          );
+        } else if (player.paused) {
+          console.log('Sending sync-ack pause');
+          sendPlayerEventToServer(
+            'sync-ack-pause',
+            player.currentTime,
+            player.source,
+          );
+        }
+      }
+
+      if (
+        (playerEvent.event === 'sync-ack-play' ||
+          playerEvent.event === 'sync-ack-pause') &&
+        player == null
+      ) {
+        console.log('Received sync-ack');
+        sendEvent = false;
+        // init Player with video url
+        initPlayer(playerEvent.url, playerEvent.time);
+
+        // We can't invoke play() or pause() on first start without user interaction
+        // This is because pretty much all browsers don't allow autoplay
+        firstEvent = playerEvent;
+
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
+      }
+
+      if (playerEvent.event === 'add-video') {
         // Destroy old Player instance
         if (player != null) {
           player.destroy();
         }
 
         // Re-init Player with new video url
-        initPlayer(message.url);
-        console.log('Now Playing: ' + message.url);
+        initPlayer(playerEvent.url, '0');
+        console.log('Now Playing: ' + playerEvent.url);
       }
 
-      if (message.event == 'play' && message.user != user) {
-        console.log('Received Play Event');
+      if (playerEvent.event === 'play' && playerEvent.user != user) {
         sendEvent = false;
-        player.currentTime = message.time;
+        player.currentTime = playerEvent.time;
         player.play();
         setTimeout(() => {
           sendEvent = true;
         }, 500);
       }
 
-      if (message.event == 'pause' && message.user != user) {
-        console.log('Received Pause Event');
+      if (playerEvent.event === 'pause' && playerEvent.user != user) {
         sendEvent = false;
-        player.currentTime = message.time;
+        player.currentTime = playerEvent.time;
         player.pause();
         setTimeout(() => {
           sendEvent = true;
         }, 500);
       }
 
-      if (message.event == 'seeked' && message.user != user) {
-        console.log('Received Seeked Event');
+      if (playerEvent.event === 'seeked' && playerEvent.user != user) {
         sendEvent = false;
-        player.currentTime = message.time;
+        player.currentTime = playerEvent.time;
         setTimeout(() => {
           sendEvent = true;
         }, 500);
       }
-
-      console.log('WebSocket Server Message: ' + event.data);
     };
 
     // Event Listener for timeupdate event
