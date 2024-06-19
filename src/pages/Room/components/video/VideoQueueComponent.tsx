@@ -21,11 +21,8 @@ const VideoQueueComponent: React.FC = () => {
           <div className='grid grid-cols-1 gap-2'>
             {queueItems.map((item, index) => {
               return (
-                <a href='#'>
-                  <div
-                    className='flex flex-row hover:bg-sky-800/30 bg-sky-800/10 rounded-lg px-4'
-                    key={index}
-                  >
+                <a href='#' key={index}>
+                  <div className='flex flex-row hover:bg-sky-800/30 bg-sky-800/10 rounded-lg px-4'>
                     <div className='w-10 h-14 flex items-center text-white pl-1'>
                       <p>⮞</p>
                     </div>
