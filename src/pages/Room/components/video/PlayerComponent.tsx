@@ -1,15 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 import { PlayerEvent } from '@/types/events';
 
 const PlyrVideoPlayer: React.FC = () => {
-  // =========================
-  // To-Do: Use actual room id
-  const ROOM_ID = '1';
-  // To-Do: Get actual user from auth context
-  const user = (Math.random() + 1).toString(36).substring(7);
-  // =========================
+  const ROOM_ID = '1'; // To-Do: Use actual room id
+  const user = (Math.random() + 1).toString(36).substring(7); // To-Do: Get actual user from auth context
+
+  const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
+  const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
+  const wsRef = useRef<WebSocket | null>(null);
 
   // We have to block sending events,
   // because receiving player events causing it to send events
@@ -20,99 +20,59 @@ const PlyrVideoPlayer: React.FC = () => {
   // We store this "first" event we received here, so we can intialize the player
   let firstEvent: PlayerEvent = null;
 
-  // Toggle player ambient mode
-  // To-Do: Add option inside the player
-  let ambientMode = true;
-
   // We don't want to re-render the react player component
   // as it results in many unwanted side effects
   // So we use the same player object and properly destroy it (see initPlayer())
   let player = null;
 
-  // canvas used for ambient mode
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const setCanvasDimension = useCallback(
+    (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
+      if (!ambientMode) return;
+      canvas.height = video.offsetHeight;
+      canvas.width = video.offsetWidth;
+    },
+    [ambientMode],
+  );
 
-  // WebSocket
-  const ws = useRef<WebSocket | null>(null);
+  const paintStaticVideo = useCallback(
+    (ctx: CanvasRenderingContext2D, video: HTMLVideoElement) => {
+      if (!ambientMode) return;
+      ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
+    },
+    [ambientMode],
+  );
 
-  const setCanvasDimension = (
-    canvas: HTMLCanvasElement,
-    video: HTMLVideoElement,
-  ) => {
-    // Ambient mode: Set canvas dimension
-    if (!ambientMode) {
-      return;
-    }
-    canvas.height = video.offsetHeight;
-    canvas.width = video.offsetWidth;
-  };
+  const sendPlayerEventToServer = useCallback(
+    (event: string, time: number, url: string, override = false) => {
+      if (!sendEvent && !override) return;
+      const eventToSend: PlayerEvent = {
+        room: ROOM_ID,
+        event,
+        user,
+        time,
+        url,
+      };
+      wsRef.current?.send(JSON.stringify(eventToSend));
+    },
+    [ROOM_ID, sendEvent, user],
+  );
 
-  const paintStaticVideo = (
-    ctx: CanvasRenderingContext2D,
-    video: HTMLVideoElement,
-  ) => {
-    // Ambient mode: Draw screenshot of video onto canvas
-    if (!ambientMode) {
-      return;
-    }
-    ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
-  };
-
-  const sendPlayerEventToServer = (
-    event: string,
-    time: string,
-    url: string,
-    override = false,
-  ) => {
-    if (!sendEvent && !override) {
-      return;
-    }
-
-    const eventToSend: PlayerEvent = {
-      room: ROOM_ID,
-      event: event,
-      user: user,
-      time: time,
-      url: url,
-    };
-
-    ws.current?.send(JSON.stringify(eventToSend));
-  };
-
-  const generateVideoSource = (source: string) => {
-    // Check if url is from youtube
-    const regex =
+  const generateVideoSource = useCallback((source: string): Plyr.SourceInfo => {
+    const youtubeRegex =
       /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/i;
-    const result = source.match(regex);
-
-    if (result) {
-      console.log('Detected youtube video:', result);
-
-      // Disable ambient mode as youtube integration does not support it
-      ambientMode = false;
-
+    const match = source.match(youtubeRegex);
+    if (match) {
+      setAmbientMode(false);
       return {
         type: 'video',
-        sources: [
-          {
-            src: result[1],
-            provider: 'youtube',
-          },
-        ],
-      } as Plyr.SourceInfo;
+        sources: [{ src: match[1], provider: 'youtube' }],
+      };
     }
-
     return {
       type: 'video',
-      sources: [
-        {
-          src: source,
-          type: 'video/mp4',
-          size: 1080,
-        },
-      ],
-    } as Plyr.SourceInfo;
-  };
+      sources: [{ src: source, type: 'video/mp4', size: 1080 }],
+    };
+  }, []);
 
   const initPlayer = (source: string) => {
     // Destroy old Player instance
@@ -188,7 +148,7 @@ const PlyrVideoPlayer: React.FC = () => {
         }
 
         // Re-request sync, as our client might be out of sync
-        sendPlayerEventToServer('re-sync', '0', null, true);
+        sendPlayerEventToServer('re-sync', 0, null, true);
 
         setTimeout(() => {
           sendEvent = true;
@@ -237,13 +197,13 @@ const PlyrVideoPlayer: React.FC = () => {
     webSocketUrl.protocol = webSocketUrl.protocol.replace('http', 'ws');
 
     // Initialize WebSocket connection
-    ws.current = new WebSocket(webSocketUrl.href);
+    wsRef.current = new WebSocket(webSocketUrl.href);
 
-    ws.current.onopen = () => {
+    wsRef.current.onopen = () => {
       console.log('WebSocket connection opened');
 
       // Sync request
-      sendPlayerEventToServer('sync', '0', null);
+      sendPlayerEventToServer('sync', 0, null);
     };
 
     // Default video
@@ -253,7 +213,7 @@ const PlyrVideoPlayer: React.FC = () => {
     //   );
     // }, 200);
 
-    ws.current.onmessage = event => {
+    wsRef.current.onmessage = event => {
       //console.log('Received message', event);
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
 
@@ -393,11 +353,11 @@ const PlyrVideoPlayer: React.FC = () => {
       }
     };
 
-    ws.current.onclose = () => {
+    wsRef.current.onclose = () => {
       console.log('WebSocket connection closed');
     };
 
-    ws.current.onerror = error => {
+    wsRef.current.onerror = error => {
       console.error('WebSocket error', error);
     };
   });

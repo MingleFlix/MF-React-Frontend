@@ -50,7 +50,7 @@ const AddVideoInput: React.FC = () => {
         room: ROOM_ID,
         event: 'add-video',
         user: '',
-        time: '0',
+        time: 0,
         url: inputValue,
       };
 

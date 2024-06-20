@@ -9,6 +9,6 @@ export interface PlayerEvent {
   room: string;
   event: string;
   user: string;
-  time: string | null;
+  time: number | null;
   url: string | null;
 }
