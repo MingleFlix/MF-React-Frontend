@@ -16,6 +16,8 @@ const PlyrVideoPlayer: React.FC = () => {
   // resulting in an endless loop of events being broadcasted
   let sendEvent = true;
 
+  // When joining the room, we ask all other members what the current event is
+  // We store this "first" event we received here, so we can intialize the player
   let firstEvent: PlayerEvent = null;
 
   // Toggle player ambient mode
@@ -37,6 +39,7 @@ const PlyrVideoPlayer: React.FC = () => {
     canvas: HTMLCanvasElement,
     video: HTMLVideoElement,
   ) => {
+    // Ambient mode: Set canvas dimension
     canvas.height = video.offsetHeight;
     canvas.width = video.offsetWidth;
   };
@@ -45,6 +48,7 @@ const PlyrVideoPlayer: React.FC = () => {
     ctx: CanvasRenderingContext2D,
     video: HTMLVideoElement,
   ) => {
+    // Ambient mode: Draw screenshot of video onto canvas
     if (!ambientMode) {
       return;
     }
@@ -55,8 +59,9 @@ const PlyrVideoPlayer: React.FC = () => {
     event: string,
     time: string,
     url: string,
+    override = false,
   ) => {
-    if (!sendEvent) {
+    if (!sendEvent && !override) {
       return;
     }
 
@@ -146,32 +151,39 @@ const PlyrVideoPlayer: React.FC = () => {
       if (firstEvent == null) {
         sendPlayerEventToServer('play', currentTime, player.source);
       } else {
+        sendEvent = false;
+
         player.currentTime = firstEvent.time;
+
         if (firstEvent.event == 'sync-ack-play') {
           player.play();
         }
         if (firstEvent.event == 'sync-ack-pause') {
           player.pause();
         }
+
+        // Re-request sync, as our client might be out of sync
+        sendPlayerEventToServer('re-sync', '0', null, true);
+
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
       }
+
       firstEvent = null;
     });
 
     // Event Listener for pause event
     player.on('pause', () => {
-      const currentTime = player.currentTime;
-      console.log('Video stopped at ' + currentTime);
-
-      sendPlayerEventToServer('pause', currentTime, player.source);
+      console.log('Video stopped at ' + player.currentTime);
+      sendPlayerEventToServer('pause', player.currentTime, player.source);
     });
 
     // Event Listener for seeked event
     player.on('seeked', () => {
-      const currentTime = player.currentTime;
-      console.log('Video seeked to ' + currentTime);
+      console.log('Video seeked to ' + player.currentTime);
       paintStaticVideo(ctx!, video);
-
-      sendPlayerEventToServer('seeked', currentTime, player.source);
+      sendPlayerEventToServer('seeked', player.currentTime, player.source);
     });
   };
 
@@ -238,6 +250,32 @@ const PlyrVideoPlayer: React.FC = () => {
         }
       }
 
+      if (playerEvent.event === 're-sync') {
+        // Other client asked to re-sync
+        console.log('Received re-sync request');
+
+        if (player == null) {
+          // We can't respond to that request
+          return;
+        }
+
+        if (player.playing) {
+          console.log('Sending re-sync-ack play');
+          sendPlayerEventToServer(
+            're-sync-ack-play',
+            player.currentTime,
+            player.source,
+          );
+        } else if (player.paused) {
+          console.log('Sending re-sync-ack pause');
+          sendPlayerEventToServer(
+            're-sync-ack-pause',
+            player.currentTime,
+            player.source,
+          );
+        }
+      }
+
       if (
         (playerEvent.event === 'sync-ack-play' ||
           playerEvent.event === 'sync-ack-pause') &&
@@ -251,6 +289,28 @@ const PlyrVideoPlayer: React.FC = () => {
         // We can't invoke play() or pause() on first start without user interaction
         // This is because pretty much all browsers don't allow autoplay
         firstEvent = playerEvent;
+
+        setTimeout(() => {
+          sendEvent = true;
+        }, 500);
+      }
+
+      if (
+        (playerEvent.event === 're-sync-ack-play' ||
+          playerEvent.event === 're-sync-ack-pause') &&
+        player != null
+      ) {
+        console.log('Received re-sync-ack');
+        sendEvent = false;
+
+        player.currentTime = playerEvent.time;
+
+        if (playerEvent.event == 're-sync-ack-play') {
+          player.play();
+        }
+        if (playerEvent.event == 're-sync-ack-pause') {
+          player.pause();
+        }
 
         setTimeout(() => {
           sendEvent = true;
@@ -294,14 +354,6 @@ const PlyrVideoPlayer: React.FC = () => {
         }, 500);
       }
     };
-
-    // Event Listener for timeupdate event
-    // Not sure if we want to send this data to the websocket,
-    // as it will cause a lot of network traffic
-    // player.on('timeupdate', () => {
-    //   var currentTime = player.currentTime;
-    //   console.log('Video currently at ' + currentTime);
-    // });
 
     ws.current.onclose = () => {
       console.log('WebSocket connection closed');
