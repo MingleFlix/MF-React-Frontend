@@ -70,7 +70,7 @@ export function WatchComponent() {
     <section id='about' className='h-[95vh]' style={{ padding: '20px 50px' }}>
       <div className='h-[90vh] pt-[65px]'>
         <div className='flex flex-col xl:flex-row justify-center'>
-          <div className='pt-2 space-y-6 max-w-[100%] xl:max-w-[90%] 2xl:max-w-[70%]'>
+          <div className='pt-2 space-y-6 max-w-[100%] xl:max-w-[90%] 2xl:max-w-[70%] min-w-[50%]'>
             <AddVideoInput></AddVideoInput>
             <PlayerComponent></PlayerComponent>
           </div>

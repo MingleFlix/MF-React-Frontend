@@ -22,7 +22,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
   // Toggle player ambient mode
   // To-Do: Add option inside the player
-  const ambientMode = true;
+  let ambientMode = true;
 
   // We don't want to re-render the react player component
   // as it results in many unwanted side effects
@@ -40,6 +40,9 @@ const PlyrVideoPlayer: React.FC = () => {
     video: HTMLVideoElement,
   ) => {
     // Ambient mode: Set canvas dimension
+    if (!ambientMode) {
+      return;
+    }
     canvas.height = video.offsetHeight;
     canvas.width = video.offsetWidth;
   };
@@ -76,6 +79,41 @@ const PlyrVideoPlayer: React.FC = () => {
     ws.current?.send(JSON.stringify(eventToSend));
   };
 
+  const generateVideoSource = (source: string) => {
+    // Check if url is from youtube
+    const regex =
+      /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/i;
+    const result = source.match(regex);
+
+    if (result) {
+      console.log('Detected youtube video:', result);
+
+      // Disable ambient mode as youtube integration does not support it
+      ambientMode = false;
+
+      return {
+        type: 'video',
+        sources: [
+          {
+            src: result[1],
+            provider: 'youtube',
+          },
+        ],
+      } as Plyr.SourceInfo;
+    }
+
+    return {
+      type: 'video',
+      sources: [
+        {
+          src: source,
+          type: 'video/mp4',
+          size: 1080,
+        },
+      ],
+    } as Plyr.SourceInfo;
+  };
+
   const initPlayer = (source: string) => {
     // Destroy old Player instance
     // React has some weird side effects
@@ -95,19 +133,8 @@ const PlyrVideoPlayer: React.FC = () => {
       ],
     });
 
-    const videoSource = {
-      type: 'video',
-      sources: [
-        {
-          src: source,
-          type: 'video/mp4',
-          size: 1080,
-        },
-      ],
-    };
-
     // Set Player video source
-    player.source = videoSource as Plyr.SourceInfo;
+    player.source = generateVideoSource(source);
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -183,6 +210,20 @@ const PlyrVideoPlayer: React.FC = () => {
       paintStaticVideo(ctx!, video);
       sendPlayerEventToServer('seeked', player.currentTime, player.source);
     });
+
+    player.on('statechange', (event: any) => {
+      const youtubeState = event.detail.code;
+
+      if (youtubeState === 1) {
+        if (firstEvent == null) {
+          sendPlayerEventToServer('play', player.currentTime, player.source);
+        }
+      }
+
+      if (youtubeState === 2) {
+        sendPlayerEventToServer('pause', player.currentTime, player.source);
+      }
+    });
   };
 
   useEffect(() => {
@@ -213,7 +254,7 @@ const PlyrVideoPlayer: React.FC = () => {
     // }, 200);
 
     ws.current.onmessage = event => {
-      console.log('Received message', event);
+      //console.log('Received message', event);
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
 
       // We try to prevent receiving our own events server-side
@@ -322,8 +363,7 @@ const PlyrVideoPlayer: React.FC = () => {
         }
 
         // Re-init Player with new video url
-        initPlayer(playerEvent.url, '0');
-        console.log('Now Playing: ' + playerEvent.url);
+        initPlayer(playerEvent.url);
       }
 
       if (playerEvent.event === 'play' && playerEvent.user != user) {
