@@ -76,7 +76,7 @@ const PlyrVideoPlayer: React.FC = () => {
     ws.current?.send(JSON.stringify(eventToSend));
   };
 
-  const initPlayer = (source: string, time: string) => {
+  const initPlayer = (source: string) => {
     // Destroy old Player instance
     // React has some weird side effects
     if (player != null) {
@@ -108,8 +108,6 @@ const PlyrVideoPlayer: React.FC = () => {
 
     // Set Player video source
     player.source = videoSource as Plyr.SourceInfo;
-
-    player.time = time;
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -284,7 +282,7 @@ const PlyrVideoPlayer: React.FC = () => {
         console.log('Received sync-ack');
         sendEvent = false;
         // init Player with video url
-        initPlayer(playerEvent.url, playerEvent.time);
+        initPlayer(playerEvent.url);
 
         // We can't invoke play() or pause() on first start without user interaction
         // This is because pretty much all browsers don't allow autoplay
