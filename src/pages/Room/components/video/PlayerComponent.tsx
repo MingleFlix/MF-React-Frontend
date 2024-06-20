@@ -8,6 +8,7 @@ const PlyrVideoPlayer: React.FC = () => {
   const user = (Math.random() + 1).toString(36).substring(7); // To-Do: Get actual user from auth context
 
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
+  const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
   const wsRef = useRef<WebSocket | null>(null);
 
@@ -19,11 +20,6 @@ const PlyrVideoPlayer: React.FC = () => {
   // When joining the room, we ask all other members what the current event is
   // We store this "first" event we received here, so we can intialize the player
   let firstEvent: PlayerEvent = null;
-
-  // We don't want to re-render the react player component
-  // as it results in many unwanted side effects
-  // So we use the same player object and properly destroy it (see initPlayer())
-  let player = null;
 
   const setCanvasDimension = useCallback(
     (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
@@ -41,6 +37,18 @@ const PlyrVideoPlayer: React.FC = () => {
     },
     [ambientMode],
   );
+
+  const handleResize = (
+    canvas: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+    video: HTMLVideoElement,
+  ) => {
+    // When resizing the window we also need to resize the canvas for ambient mode
+    setCanvasDimension(canvas!, video);
+    if (video.paused) {
+      paintStaticVideo(ctx!, video);
+    }
+  };
 
   const sendPlayerEventToServer = useCallback(
     (event: string, time: number, url: string, override = false) => {
@@ -77,12 +85,9 @@ const PlyrVideoPlayer: React.FC = () => {
   const initPlayer = (source: string) => {
     // Destroy old Player instance
     // React has some weird side effects
-    if (player != null) {
-      player.destroy();
-    }
+    playerRef.current?.destroy();
 
-    // Init Player
-    player = new Plyr(document.getElementById('player'), {
+    const player = new Plyr(document.getElementById('player'), {
       controls: [
         'play',
         'progress',
@@ -93,8 +98,8 @@ const PlyrVideoPlayer: React.FC = () => {
       ],
     });
 
-    // Set Player video source
     player.source = generateVideoSource(source);
+    playerRef.current = player;
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -103,20 +108,9 @@ const PlyrVideoPlayer: React.FC = () => {
     // Using the plyr player or the videoRef doesn't work
     const video = document.getElementsByTagName('video')[0];
 
-    // Init Canvas
     setCanvasDimension(canvas!, video);
     paintStaticVideo(ctx!, video);
-
-    // When resizing the window we also need to resize the canvas
-    // Else it will float in space where it doesn't belong
-    const handleResize = () => {
-      setCanvasDimension(canvas!, video);
-      if (video.paused) {
-        paintStaticVideo(ctx!, video);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', () => handleResize(canvas, ctx, video));
 
     // Event Listener for play event
     player.on('play', () => {
@@ -134,18 +128,16 @@ const PlyrVideoPlayer: React.FC = () => {
       console.log('Video started at ' + currentTime);
 
       if (firstEvent == null) {
+        // @ts-ignore
         sendPlayerEventToServer('play', currentTime, player.source);
       } else {
         sendEvent = false;
 
         player.currentTime = firstEvent.time;
 
-        if (firstEvent.event == 'sync-ack-play') {
-          player.play();
-        }
-        if (firstEvent.event == 'sync-ack-pause') {
-          player.pause();
-        }
+        firstEvent.event.includes('sync-ack-play')
+          ? player.play()
+          : player.pause();
 
         // Re-request sync, as our client might be out of sync
         sendPlayerEventToServer('re-sync', 0, null, true);
@@ -161,6 +153,7 @@ const PlyrVideoPlayer: React.FC = () => {
     // Event Listener for pause event
     player.on('pause', () => {
       console.log('Video stopped at ' + player.currentTime);
+      // @ts-ignore
       sendPlayerEventToServer('pause', player.currentTime, player.source);
     });
 
@@ -169,11 +162,13 @@ const PlyrVideoPlayer: React.FC = () => {
 
       if (youtubeState === 1) {
         if (firstEvent == null) {
+          // @ts-ignore
           sendPlayerEventToServer('play', player.currentTime, player.source);
         }
       }
 
       if (youtubeState === 2) {
+        // @ts-ignore
         sendPlayerEventToServer('pause', player.currentTime, player.source);
       }
     });
@@ -208,6 +203,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
     wsRef.current.onmessage = event => {
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
+      const player = playerRef.current;
       if (playerEvent.user === user) return;
 
       const handleReceivedPlayerEvents = (playerEvent: PlayerEvent) => {
@@ -224,21 +220,25 @@ const PlyrVideoPlayer: React.FC = () => {
             ? sendPlayerEventToServer(
                 'sync-ack-play',
                 player.currentTime,
+                // @ts-ignore
                 player.source,
               )
             : sendPlayerEventToServer(
                 'sync-ack-pause',
                 player.currentTime,
+                // @ts-ignore
                 player.source,
               );
           break;
         case 're-sync':
           if (!player) return;
           player.playing
-            ? sendPlayerEventToServer('play', player.currentTime, player.source)
+            ? // @ts-ignore
+              sendPlayerEventToServer('play', player.currentTime, player.source)
             : sendPlayerEventToServer(
                 'pause',
                 player.currentTime,
+                // @ts-ignore
                 player.source,
               );
           break;
