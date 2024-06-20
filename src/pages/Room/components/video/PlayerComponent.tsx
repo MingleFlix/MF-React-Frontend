@@ -164,13 +164,6 @@ const PlyrVideoPlayer: React.FC = () => {
       sendPlayerEventToServer('pause', player.currentTime, player.source);
     });
 
-    // Event Listener for seeked event
-    player.on('seeked', () => {
-      console.log('Video seeked to ' + player.currentTime);
-      paintStaticVideo(ctx!, video);
-      sendPlayerEventToServer('seeked', player.currentTime, player.source);
-    });
-
     player.on('statechange', (event: any) => {
       const youtubeState = event.detail.code;
 
@@ -214,142 +207,59 @@ const PlyrVideoPlayer: React.FC = () => {
     // }, 200);
 
     wsRef.current.onmessage = event => {
-      //console.log('Received message', event);
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
+      if (playerEvent.user === user) return;
 
-      // We try to prevent receiving our own events server-side
-      // However we want to make sure
-      if (playerEvent.user == user) {
-        console.log('Ignoring event');
-        return;
-      }
-
-      if (playerEvent.event === 'sync') {
-        // Other client asked to sync
-
-        if (player == null) {
-          // We can't respond to that request
-          return;
-        }
-
-        if (player.playing) {
-          console.log('Sending sync-ack play');
-          sendPlayerEventToServer(
-            'sync-ack-play',
-            player.currentTime,
-            player.source,
-          );
-        } else if (player.paused) {
-          console.log('Sending sync-ack pause');
-          sendPlayerEventToServer(
-            'sync-ack-pause',
-            player.currentTime,
-            player.source,
-          );
-        }
-      }
-
-      if (playerEvent.event === 're-sync') {
-        // Other client asked to re-sync
-        console.log('Received re-sync request');
-
-        if (player == null) {
-          // We can't respond to that request
-          return;
-        }
-
-        if (player.playing) {
-          console.log('Sending re-sync-ack play');
-          sendPlayerEventToServer(
-            're-sync-ack-play',
-            player.currentTime,
-            player.source,
-          );
-        } else if (player.paused) {
-          console.log('Sending re-sync-ack pause');
-          sendPlayerEventToServer(
-            're-sync-ack-pause',
-            player.currentTime,
-            player.source,
-          );
-        }
-      }
-
-      if (
-        (playerEvent.event === 'sync-ack-play' ||
-          playerEvent.event === 'sync-ack-pause') &&
-        player == null
-      ) {
-        console.log('Received sync-ack');
-        sendEvent = false;
-        // init Player with video url
-        initPlayer(playerEvent.url);
-
-        // We can't invoke play() or pause() on first start without user interaction
-        // This is because pretty much all browsers don't allow autoplay
-        firstEvent = playerEvent;
-
-        setTimeout(() => {
-          sendEvent = true;
-        }, 500);
-      }
-
-      if (
-        (playerEvent.event === 're-sync-ack-play' ||
-          playerEvent.event === 're-sync-ack-pause') &&
-        player != null
-      ) {
-        console.log('Received re-sync-ack');
-        sendEvent = false;
-
-        player.currentTime = playerEvent.time;
-
-        if (playerEvent.event == 're-sync-ack-play') {
-          player.play();
-        }
-        if (playerEvent.event == 're-sync-ack-pause') {
-          player.pause();
-        }
-
-        setTimeout(() => {
-          sendEvent = true;
-        }, 500);
-      }
-
-      if (playerEvent.event === 'add-video') {
-        // Destroy old Player instance
-        if (player != null) {
-          player.destroy();
-        }
-
-        // Re-init Player with new video url
-        initPlayer(playerEvent.url);
-      }
-
-      if (playerEvent.event === 'play' && playerEvent.user != user) {
+      const handleReceivedPlayerEvents = (playerEvent: PlayerEvent) => {
         sendEvent = false;
         player.currentTime = playerEvent.time;
-        player.play();
-        setTimeout(() => {
-          sendEvent = true;
-        }, 500);
-      }
+        playerEvent.event.includes('play') ? player.play() : player.pause();
+        setTimeout(() => (sendEvent = true), 500);
+      };
 
-      if (playerEvent.event === 'pause' && playerEvent.user != user) {
-        sendEvent = false;
-        player.currentTime = playerEvent.time;
-        player.pause();
-        setTimeout(() => {
-          sendEvent = true;
-        }, 500);
-      }
-
-      if (playerEvent.event === 'seeked' && playerEvent.user != user) {
-        sendEvent = false;
-        player.currentTime = playerEvent.time;
-        setTimeout(() => {
-          sendEvent = true;
-        }, 500);
+      switch (playerEvent.event) {
+        case 'sync':
+          if (!player) return;
+          player.playing
+            ? sendPlayerEventToServer(
+                'sync-ack-play',
+                player.currentTime,
+                player.source,
+              )
+            : sendPlayerEventToServer(
+                'sync-ack-pause',
+                player.currentTime,
+                player.source,
+              );
+          break;
+        case 're-sync':
+          if (!player) return;
+          player.playing
+            ? sendPlayerEventToServer('play', player.currentTime, player.source)
+            : sendPlayerEventToServer(
+                'pause',
+                player.currentTime,
+                player.source,
+              );
+          break;
+        case 'sync-ack-play':
+        case 'sync-ack-pause':
+          if (player) return;
+          sendEvent = false;
+          initPlayer(playerEvent.url);
+          firstEvent = playerEvent;
+          setTimeout(() => (sendEvent = true), 500);
+          break;
+        case 'add-video':
+          player?.destroy();
+          initPlayer(playerEvent.url);
+          break;
+        case 'play':
+        case 'pause':
+          handleReceivedPlayerEvents(playerEvent);
+          break;
+        default:
+          break;
       }
     };
 
