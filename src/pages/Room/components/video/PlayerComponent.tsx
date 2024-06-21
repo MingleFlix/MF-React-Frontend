@@ -20,9 +20,12 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     ? auth.userId
     : (Math.random() + 1).toString(36).substring(7);
 
-  console.log('Room:', roomId, 'User:', user);
+  const token = auth ? auth.token : 'test-token';
+
+  console.log('Room:', roomId, 'User:', user, 'Token:', token);
 
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
+  const [error, setError] = React.useState<string>('');
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
   const wsRef = useRef<WebSocket | null>(null);
@@ -337,7 +340,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   useEffect(() => {
     // Create URL used for websocket
     var webSocketUrl = new URL(
-      `/api/video-management?roomID=${roomId}&type=player`,
+      `/api/video-management?roomID=${roomId}&type=player&token=${token}`,
       window.location.href,
     );
 
@@ -424,16 +427,19 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     };
 
     wsRef.current.onclose = () => {
+      setError('Error connecting to video sync service!');
       console.log('WebSocket connection closed');
     };
 
     wsRef.current.onerror = error => {
+      setError('Error connecting to video sync service!');
       console.error('WebSocket error', error);
     };
   });
 
   return (
     <div className='relative z-[1]'>
+      {error && <p className='pb-5 text-red-500'>{error}</p>}
       <canvas ref={canvasRef} className='decoy'></canvas>
       <video id='player' className='plyr-react plyr' playsInline />
     </div>
