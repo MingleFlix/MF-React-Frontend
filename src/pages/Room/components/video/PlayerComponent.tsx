@@ -1,11 +1,26 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 import { PlayerEvent } from '@/types/events';
+import { AuthContext } from '@/context/AuthContext';
 
-const PlyrVideoPlayer: React.FC = () => {
-  const ROOM_ID = '1'; // To-Do: Use actual room id
-  const user = (Math.random() + 1).toString(36).substring(7); // To-Do: Get actual user from auth context
+const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
+  // Auth
+  const authContext = useContext(AuthContext);
+  const { auth } = authContext;
+
+  // Check is temporary for dev purposes
+  const user = auth
+    ? auth.userId
+    : (Math.random() + 1).toString(36).substring(7);
+
+  console.log('Room:', roomId, 'User:', user);
 
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
   const playerRef = useRef<Plyr | null>(null);
@@ -54,7 +69,7 @@ const PlyrVideoPlayer: React.FC = () => {
     (event: string, time: number, url: string, override = false) => {
       if (!sendEvent && !override) return;
       const eventToSend: PlayerEvent = {
-        room: ROOM_ID,
+        room: roomId,
         event,
         user,
         time,
@@ -62,7 +77,7 @@ const PlyrVideoPlayer: React.FC = () => {
       };
       wsRef.current?.send(JSON.stringify(eventToSend));
     },
-    [ROOM_ID, sendEvent, user],
+    [roomId, sendEvent, user],
   );
 
   const generateVideoSource = useCallback((source: string): Plyr.SourceInfo => {
@@ -322,7 +337,7 @@ const PlyrVideoPlayer: React.FC = () => {
   useEffect(() => {
     // Create URL used for websocket
     var webSocketUrl = new URL(
-      `/api/video-management?roomID=${ROOM_ID}&type=player`,
+      `/api/video-management?roomID=${roomId}&type=player`,
       window.location.href,
     );
 

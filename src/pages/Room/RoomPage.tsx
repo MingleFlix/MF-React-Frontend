@@ -53,7 +53,7 @@ export default function RoomPage() {
     <div id='room-page'>
       <h1>Room: {roomId}</h1>
       <div id='room-content'>
-        <WatchComponent />
+        <WatchComponent roomId={roomId}></WatchComponent>
       </div>
     </div>
   );
