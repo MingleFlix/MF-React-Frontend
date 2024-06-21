@@ -22,7 +22,6 @@ export default function RoomPage() {
     return null;
   }
 
-  // console.log(data);
   return (
     <div id='room-page'>
       <h1>Room: {roomId}</h1>
