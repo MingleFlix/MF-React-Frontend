@@ -118,7 +118,7 @@ const PlyrVideoPlayer: React.FC = () => {
 
       // Main loop for ambient mode
       (function loop() {
-        if (!player.paused && !player.ended) {
+        if (!player.paused && !player.ended && ambientMode) {
           ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
           setTimeout(loop, 24000 / 1001); // drawing at 23.976fps
         }
