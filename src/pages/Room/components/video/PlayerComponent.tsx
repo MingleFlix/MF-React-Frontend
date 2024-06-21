@@ -172,7 +172,152 @@ const PlyrVideoPlayer: React.FC = () => {
         sendPlayerEventToServer('pause', player.currentTime, player.source);
       }
     });
+
+    // Add custom double tap logic
+    player.on('ready', () => {
+      doubleClick(player);
+    });
   };
+
+  // Code Source: https://github.com/sampotts/plyr/issues/2156#issuecomment-1256708414
+  // Slightly adjusted for typescript
+  function doubleClick(player: any) {
+    const byClass = document.getElementsByClassName.bind(document),
+      createElement = document.createElement.bind(document);
+
+    // Remove all dblclick stuffs
+    player.eventListeners.forEach(function (eventListener: {
+      type: string;
+      element: {
+        removeEventListener: (arg0: any, arg1: any, arg2: any) => void;
+      };
+      callback: any;
+      options: any;
+    }) {
+      if (eventListener.type === 'dblclick') {
+        eventListener.element.removeEventListener(
+          eventListener.type,
+          eventListener.callback,
+          eventListener.options,
+        );
+      }
+    });
+
+    // Create overlay that will show the skipped time
+    const skip_ol = createElement('div');
+    skip_ol.id = 'plyr__time_skip';
+    byClass('plyr')[0].appendChild(skip_ol);
+
+    // A class to manage multi click count and remember last clicked side (may cause issue otherwise)
+    class multiclick_counter {
+      timers: any[];
+      count: number;
+      reseted: number;
+      last_side: null;
+      timer: any[];
+      last_click: string;
+
+      constructor() {
+        this.timers = []; // collection of timers. Important
+        this.count = 0; // click count
+        this.reseted = 0; // before resetting what was the count
+        this.last_side = null; // L C R 3sides
+      }
+
+      clicked() {
+        this.count += 1;
+        var xcount = this.count; // will be checked if click count increased in the time
+        this.timers.push(setTimeout(this.reset.bind(this, xcount), 500)); // wait till 500ms for next click
+        return this.count;
+      }
+
+      reset_count(n: number) {
+        // Reset count if clicked on the different side
+        this.reseted = this.count;
+        this.count = n;
+        for (var i = 0; i < this.timers.length; i++) {
+          clearTimeout(this.timers[i]);
+        }
+        this.timer = [];
+      }
+
+      reset(xcount: number) {
+        if (this.count > xcount) {
+          return;
+        } // return if clicked after timer started
+        // Reset otherwise
+        this.count = 0;
+        this.last_side = null;
+        this.reseted = 0;
+        skip_ol.style.opacity = '0';
+        this.timer = [];
+      }
+    }
+
+    var counter = new multiclick_counter();
+
+    const poster = byClass('plyr__poster')[0];
+    poster.onclick = function (e: {
+      target: { getBoundingClientRect: () => any; offsetWidth: any };
+      clientX: number;
+    }) {
+      const count = counter.clicked();
+      if (count < 2) {
+        return;
+      } // if not double click
+
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left; //x position within the element.
+
+      // The relative position of click on video
+      const width = e.target.offsetWidth;
+      const perc = (x * 100) / width;
+
+      var panic = true; // panic if the side needs to be checked
+      var last_click = counter.last_side;
+
+      if (last_click == null) {
+        panic = false;
+      }
+
+      if (perc < 40) {
+        if (player.currentTime == 0) {
+          return; // won't seek beyond 0
+        }
+        // @ts-ignore
+        counter.last_side = 'L';
+        if (panic && last_click != 'L') {
+          counter.reset_count(1);
+          return;
+        }
+
+        skip_ol.style.opacity = '0.9';
+        player.rewind();
+        skip_ol.innerHTML =
+          '<i class="fa-solid fa-backward"></i> ' + (count - 1) * 10 + 's';
+      } else if (perc > 60) {
+        if (player.currentTime == player.duration) {
+          return; // won't seek beyond duration
+        }
+        // @ts-ignore
+        counter.last_side = 'R';
+        if (panic && last_click != 'R') {
+          counter.reset_count(1);
+          return;
+        }
+
+        skip_ol.style.opacity = '0.9';
+        // @ts-ignore
+        last_click = 'R';
+        player.forward();
+        skip_ol.innerHTML =
+          '<i class="fa-solid fa-forward"></i> ' + (count - 1) * 10 + 's';
+      } else {
+        player.togglePlay();
+        counter.last_click = 'C';
+      }
+    };
+  }
 
   useEffect(() => {
     // Create URL used for websocket
