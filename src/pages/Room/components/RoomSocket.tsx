@@ -8,6 +8,7 @@ import {
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import React, { useCallback, useEffect, useState } from 'react';
 import userPlaceholder from '@/assets/user-placeholder.webp';
+import { WatchComponent } from './WatchComponent';
 
 export function RoomSocket({
   roomId,
@@ -72,7 +73,7 @@ export function RoomSocket({
         </div>
       </div>
       <div id='room-content'>
-        {/*<WatchComponent roomId={roomId}></WatchComponent>*/}
+        {<WatchComponent roomId={roomId}></WatchComponent>}
       </div>
     </>
   );
