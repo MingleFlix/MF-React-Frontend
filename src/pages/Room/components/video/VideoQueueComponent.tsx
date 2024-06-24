@@ -69,7 +69,7 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
   const deleteQueueItem = useCallback(
     (item: QueueItem) => {
       if (readyState !== ReadyState.OPEN) {
-        // Display Error message
+        alert('No connection to Video Sync Service!');
         return;
       }
       const playerEvent: PlayerEvent = {
@@ -87,7 +87,7 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   const playQueueItem = (item: QueueItem) => {
     if (readyState !== ReadyState.OPEN) {
-      // Display Error message
+      alert('No connection to Video Sync Service!');
       return;
     }
 
@@ -106,7 +106,9 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   return (
     <div className='2xl:w-[450px] !z-[0]'>
-      <div className='relative mb-6 bg-[#292929] border-sky-600 border-b-[2px] rounded-lg'>
+      <div
+        className={`relative mb-6 bg-[#292929] border-b-[2px] rounded-lg ${readyState !== ReadyState.OPEN ? 'border-red-600 hover:border-red-400' : 'border-sky-600 hover:border-sky-400'}`}
+      >
         <div className='p-[14px]'>
           <p className='leading-normal text-lg font-bold text-white pb-2'>
             Queue
