@@ -23,7 +23,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   console.log('Room:', roomId, 'User:', user, 'Token:', token);
 
-  const [ambientMode, setAmbientMode] = useState(false); // Toggle player ambient mode
+  const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
   const [error, setError] = useState<string>('');
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
@@ -47,6 +47,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   const setCanvasDimension = useCallback(
     (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
       if (!ambientMode) return;
+      if (!video) return;
       canvas.height = video.offsetHeight;
       canvas.width = video.offsetWidth;
     },
@@ -56,6 +57,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   const paintStaticVideo = useCallback(
     (ctx: CanvasRenderingContext2D, video: HTMLVideoElement) => {
       if (!ambientMode) return;
+      if (!video) return;
       ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
     },
     [ambientMode],
@@ -90,16 +92,16 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   );
 
   const generateVideoSource = useCallback((source: string): Plyr.SourceInfo => {
-    const youtubeRegex =
-      /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/i;
-    const match = source.match(youtubeRegex);
-    if (match) {
-      setAmbientMode(false);
-      return {
-        type: 'video',
-        sources: [{ src: match[1], provider: 'youtube' }],
-      };
-    }
+    // const youtubeRegex =
+    //   /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/i;
+    // const match = source.match(youtubeRegex);
+    // if (match) {
+    //   setAmbientMode(false);
+    //   return {
+    //     type: 'video',
+    //     sources: [{ src: match[1], provider: 'youtube' }],
+    //   };
+    // }
     return {
       type: 'video',
       sources: [{ src: source, type: 'video/mp4', size: 1080 }],
@@ -146,7 +148,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
 
       // Main loop for ambient mode
       (function loop() {
-        if (!player.paused && !player.ended && ambientMode) {
+        if (!player.paused && !player.ended && ambientMode && video) {
           ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
           setTimeout(loop, 24000 / 1001); // drawing at 23.976fps
         }
@@ -185,21 +187,39 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
       sendPlayerEventToServer('pause', player.currentTime, player.source);
     });
 
-    player.on('statechange', (event: any) => {
-      const youtubeState = event.detail.code;
+    // player.on('statechange', (event: any) => {
+    //   const youtubeState = event.detail.code;
+    //   if (!sendEvent) return;
+    //   console.log('=== YouTube State Changed ===');
 
-      if (youtubeState === 1) {
-        if (firstEvent == null) {
-          // @ts-ignore
-          sendPlayerEventToServer('play', player.currentTime, player.source);
-        }
-      }
+    //   sendEvent = false;
 
-      if (youtubeState === 2) {
-        // @ts-ignore
-        sendPlayerEventToServer('pause', player.currentTime, player.source);
-      }
-    });
+    //   if (youtubeState === 1) {
+    //     if (firstEvent == null) {
+    //       // @ts-ignore
+    //       sendPlayerEventToServer(
+    //         'play',
+    //         player.currentTime,
+    //         player.source as unknown as string,
+    //         true,
+    //       );
+    //     }
+    //   }
+
+    //   if (youtubeState === 2) {
+    //     // @ts-ignore
+    //     sendPlayerEventToServer(
+    //       'pause',
+    //       player.currentTime,
+    //       player.source as unknown as string,
+    //       true,
+    //     );
+    //   }
+
+    //   setTimeout(() => {
+    //     sendEvent = true;
+    //   }, 1500);
+    // });
 
     // Add custom double tap logic
     player.on('ready', () => {
