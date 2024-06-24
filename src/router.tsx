@@ -6,6 +6,7 @@ import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
 import RoomPage, { loader as roomLoader } from '@/pages/Room/RoomPage.tsx';
 import Dev from '@/pages/Dev.tsx';
+import { ProtectedRoute } from '@/components/common/ProtectedRoute/ProtectedRoute.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +28,8 @@ export const router = createBrowserRouter([
       },
       {
         path: 'room/:roomId',
-        element: <RoomPage />,
+        // element: <RoomPage />,
+        element: <ProtectedRoute children={<RoomPage />} />,
         loader: roomLoader,
       },
       {

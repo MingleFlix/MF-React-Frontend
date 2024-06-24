@@ -7,6 +7,7 @@ interface AuthContextType {
   auth: AuthData | null;
   login: (token: string) => void;
   logout: () => void;
+  loading: boolean;
 }
 
 interface AuthData {
@@ -36,6 +37,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   const [auth, setAuth] = useState<AuthData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = Cookies.get('auth_token');
@@ -44,6 +46,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       extractAndSetAuth(token);
     }
+    setLoading(false);
   }, []);
 
   function extractAndSetAuth(token: string) {
@@ -77,7 +80,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, login, logout }}>
+    <AuthContext.Provider value={{ auth, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
