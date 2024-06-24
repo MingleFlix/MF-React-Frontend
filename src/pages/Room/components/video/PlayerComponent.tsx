@@ -367,7 +367,8 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     wsRef.current.onmessage = event => {
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
       const player = playerRef.current;
-      if (playerEvent.user === user) return;
+      if (playerEvent.user === user && playerEvent.event !== 'play-video')
+        return;
 
       const handleReceivedPlayerEvents = (playerEvent: PlayerEvent) => {
         sendEvent = false;
