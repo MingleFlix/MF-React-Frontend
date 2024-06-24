@@ -9,6 +9,7 @@ import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 import { PlayerEvent } from '@/types/events';
 import { AuthContext } from '@/context/AuthContext';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   // Auth
@@ -16,19 +17,23 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { auth } = authContext;
 
   // Check is temporary for dev purposes
-  const user = auth
-    ? auth.username
-    : (Math.random() + 1).toString(36).substring(7);
+  const user = (Math.random() + 1).toString(36).substring(7);
 
   const token = auth ? auth.token : 'test-token';
 
   console.log('Room:', roomId, 'User:', user, 'Token:', token);
 
-  const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
+  const [ambientMode, setAmbientMode] = useState(false); // Toggle player ambient mode
   const [error, setError] = useState<string>('');
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
-  const wsRef = useRef<WebSocket | null>(null);
+
+  // Socket
+  const [socketUrl] = useState(
+    `/api/video-management?roomID=${roomId}&type=player&token=${token}`,
+  );
+
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
   // We have to block sending events,
   // because receiving player events causing it to send events
@@ -78,7 +83,8 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
         time,
         url,
       };
-      wsRef.current?.send(JSON.stringify(eventToSend));
+
+      sendMessage(JSON.stringify(eventToSend));
     },
     [roomId, sendEvent, user],
   );
@@ -342,35 +348,10 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   }
 
   useEffect(() => {
-    // Create URL used for websocket
-    var webSocketUrl = new URL(
-      `/api/video-management?roomID=${roomId}&type=player&token=${token}`,
-      window.location.href,
-    );
-
-    // Need to switch protocol
-    webSocketUrl.protocol = webSocketUrl.protocol.replace('http', 'ws');
-
-    // Initialize WebSocket connection
-    wsRef.current = new WebSocket(webSocketUrl.href);
-
-    wsRef.current.onopen = () => {
-      console.log('WebSocket connection opened');
-
-      // Sync request
-      sendPlayerEventToServer('sync', 0, null);
-    };
-
-    // Default video
-    setTimeout(() => {
-      initPlayer(
-        'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
-      );
-    }, 200);
-
-    wsRef.current.onmessage = event => {
-      const playerEvent = JSON.parse(event.data) as PlayerEvent;
+    if (lastMessage !== null) {
+      const playerEvent = JSON.parse(lastMessage.data) as PlayerEvent;
       const player = playerRef.current;
+
       if (playerEvent.user === user && playerEvent.event !== 'play-video')
         return;
 
@@ -429,18 +410,23 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
         default:
           break;
       }
-    };
+    }
+  }, [lastMessage]);
 
-    wsRef.current.onclose = () => {
-      setError('Error connecting to video sync service!');
-      console.log('WebSocket connection closed');
-    };
+  useEffect(() => {
+    console.log('Socket Readystate:', readyState);
+    if (readyState === ReadyState.OPEN) {
+      // Sync request
+      sendPlayerEventToServer('sync', 0, null);
 
-    wsRef.current.onerror = error => {
-      setError('Error connecting to video sync service!');
-      console.error('WebSocket error', error);
-    };
-  });
+      // Default video
+      setTimeout(() => {
+        initPlayer(
+          'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+        );
+      }, 200);
+    }
+  }, [readyState]);
 
   return (
     <div className='relative z-[1]'>
