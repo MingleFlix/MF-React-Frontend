@@ -1,16 +1,119 @@
-import React from 'react';
+import { AuthContext } from '@/context/AuthContext';
+import { PlayerEvent, QueueEvent } from '@/types/events';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 interface QueueItem {
   user: string;
   url: string;
+  active: boolean;
 }
 
-const VideoQueueComponent: React.FC = () => {
-  const queueItems: QueueItem[] = [];
-  queueItems.push({ user: 'Test', url: 'some random url' });
+const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
+  // Auth
+  const authContext = useContext(AuthContext);
+  const { auth } = authContext;
+
+  // Check is temporary for dev purposes
+  const user = auth
+    ? auth.username
+    : (Math.random() + 1).toString(36).substring(7);
+
+  const token = auth ? auth.token : 'test-token';
+
+  // Queue
+  const [queueItems, setQueueItems] = useState<Array<QueueItem>>([]);
+
+  // Socket
+  const [socketUrl] = useState(
+    `/api/video-management?roomID=${roomId}&type=queue&token=${token}`,
+  );
+
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      const queueEvent = JSON.parse(lastMessage.data) as QueueEvent;
+      console.log('Received queue message from Server', queueEvent);
+
+      switch (queueEvent.event) {
+        case 'add-video':
+        case 'sync-ack-queue':
+          setQueueItems(queueEvent.items);
+          break;
+        case 'delete-video':
+          // handle delete event if needed
+          break;
+        default:
+          break;
+      }
+    }
+  }, [lastMessage]);
+
+  useEffect(() => {
+    console.log('Socket Readystate:', readyState);
+    if (readyState === ReadyState.OPEN) {
+      // Send Sync-request
+      const playerEvent: PlayerEvent = {
+        room: roomId,
+        event: 'sync-queue',
+        user: user,
+        time: 0,
+        url: null,
+      };
+
+      sendMessage(JSON.stringify(playerEvent));
+    }
+  }, [readyState]);
+
+  const ws = useRef<WebSocket | null>(null);
+
+  const deleteQueueItem = useCallback(
+    (item: QueueItem) => {
+      if (readyState !== ReadyState.OPEN) {
+        // Display Error message
+        return;
+      }
+      const playerEvent: PlayerEvent = {
+        room: roomId,
+        event: 'delete-video',
+        user: user,
+        time: 0,
+        url: item.url,
+      };
+
+      sendMessage(JSON.stringify(playerEvent));
+    },
+    [queueItems, roomId, user],
+  );
+
+  const playQueueItem = (item: QueueItem) => {
+    if (readyState !== ReadyState.OPEN) {
+      // Display Error message
+      return;
+    }
+
+    const playerEvent: PlayerEvent = {
+      room: roomId,
+      event: 'play-video',
+      user: user,
+      time: 0,
+      url: item.url,
+    };
+
+    console.log('Requesting video play:', playerEvent);
+
+    sendMessage(JSON.stringify(playerEvent));
+  };
 
   return (
-    <div className='pt-2 sm:px-2 lg:px-4 2xl:w-[450px] !z-[0]'>
+    <div className='2xl:w-[450px] !z-[0]'>
       <div className='relative mb-6 bg-[#292929] border-sky-600 border-b-[2px] rounded-lg'>
         <div className='p-[14px]'>
           <p className='leading-normal text-lg font-bold text-white pb-2'>
@@ -18,24 +121,37 @@ const VideoQueueComponent: React.FC = () => {
           </p>
         </div>
         <div className='overflow-scroll min-h-[150px] max-h-[67vh] bg-neutral-950/50 m-1 rounded-lg'>
-          <div className='grid grid-cols-1 gap-2'>
-            {queueItems.map((item, index) => {
-              return (
-                <a href='#' key={index}>
-                  <div className='flex flex-row hover:bg-sky-800/30 bg-sky-800/10 rounded-lg px-4'>
-                    <div className='w-10 h-14 flex items-center text-white pl-1'>
-                      <p>⮞</p>
-                    </div>
-                    <div className='basis-3/4 pl-2'>
-                      <p className='text-white text-sm font-bold'>{item.url}</p>
-                      <p className='text-white text-sm font-medium'>
-                        added by {item.user}
-                      </p>
-                    </div>
+          <div className='grid grid-cols-1 gap-[2px]'>
+            {readyState !== ReadyState.OPEN && (
+              <p className='pb-5 text-green-500'>Loading...</p>
+            )}
+            {queueItems.map((item, index) => (
+              <a
+                onClick={() => playQueueItem(item)}
+                href='#'
+                key={index}
+                className='cursor-pointer'
+              >
+                <div
+                  className={`flex flex-row rounded-lg px-4 ${item.active ? 'hover:bg-sky-800/50 bg-sky-800/30' : 'hover:bg-sky-800/30 bg-sky-800/10'}`}
+                >
+                  <div className='w-10 h-14 flex items-center text-white pl-1'>
+                    <p>⮞</p>
                   </div>
-                </a>
-              );
-            })}
+                  <div className='basis-3/4 pl-2 content-center'>
+                    <p className='text-white text-sm font-bold'>{item.url}</p>
+                    <p className='text-white text-sm font-medium'>
+                      added by {item.user}
+                    </p>
+                  </div>
+                  <div className='w-10 h-14 flex items-center text-white absolute right-0'>
+                    <a href='#' onClick={() => deleteQueueItem(item)}>
+                      <p className='text-red-600'>✕</p>
+                    </a>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </div>
