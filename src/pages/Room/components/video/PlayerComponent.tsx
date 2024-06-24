@@ -117,6 +117,10 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     });
 
     player.source = generateVideoSource(source);
+
+    // To get autoplay working, we have to mute the player
+    player.volume = 0;
+
     playerRef.current = player;
 
     // Canvas for player ambient mode
