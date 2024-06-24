@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 interface QueueItem {
   user: string;
@@ -15,9 +16,6 @@ interface QueueItem {
 }
 
 const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
-  const [queueItems, setQueueItems] = useState<Array<QueueItem>>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-
   // Auth
   const authContext = useContext(AuthContext);
   const { auth } = authContext;
@@ -28,83 +26,25 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
     : (Math.random() + 1).toString(36).substring(7);
 
   const token = auth ? auth.token : 'test-token';
-  const ws = useRef<WebSocket | null>(null);
 
-  const deleteQueueItem = useCallback(
-    (index: number, item: QueueItem) => {
-      console.log('Deleting', index);
-      const newArray = queueItems.filter((_qItem, qIndex) => qIndex !== index);
-      setQueueItems(newArray);
+  // Queue
+  const [queueItems, setQueueItems] = useState<Array<QueueItem>>([]);
 
-      // Send update to all other clients
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        const playerEvent: PlayerEvent = {
-          room: roomId,
-          event: 'delete-video',
-          user: user,
-          time: 0,
-          url: item.url,
-        };
-
-        ws.current.send(JSON.stringify(playerEvent));
-        console.log('Sent to WebSocket:', item);
-      } else {
-        console.error('WebSocket is not open');
-      }
-    },
-    [queueItems, roomId, user],
+  // Socket
+  const [socketUrl] = useState(
+    `/api/video-management?roomID=${roomId}&type=queue&token=${token}`,
   );
 
-  const playQueueItem = (item: QueueItem) => {
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      const playerEvent: PlayerEvent = {
-        room: roomId,
-        event: 'play-video',
-        user: user,
-        time: 0,
-        url: item.url,
-      };
-
-      ws.current.send(JSON.stringify(playerEvent));
-      console.log('Sent to WebSocket:', item);
-    } else {
-      console.error('WebSocket is not open');
-    }
-  };
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
   useEffect(() => {
-    // Create URL used for websocket
-    const webSocketUrl = new URL(
-      `/api/video-management?roomID=${roomId}&type=queue&token=${token}`,
-      window.location.href,
-    );
-
-    // Need to switch protocol
-    webSocketUrl.protocol = webSocketUrl.protocol.replace('http', 'ws');
-
-    // Initialize WebSocket connection
-    ws.current = new WebSocket(webSocketUrl.href);
-
-    ws.current.onopen = () => {
-      console.log('WebSocket connection opened, trying to sync-queue');
-    };
-
-    ws.current.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
-
-    ws.current.onerror = error => {
-      console.error('WebSocket error', error);
-    };
-
-    ws.current.onmessage = event => {
-      const queueEvent = JSON.parse(event.data) as QueueEvent;
+    if (lastMessage !== null) {
+      const queueEvent = JSON.parse(lastMessage.data) as QueueEvent;
       console.log('Received queue message from Server', queueEvent);
 
       switch (queueEvent.event) {
         case 'add-video':
-        case 'play-video':
-        case 'sync-ask-queue':
+        case 'sync-ack-queue':
           setQueueItems(queueEvent.items);
           break;
         case 'delete-video':
@@ -113,38 +53,64 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
         default:
           break;
       }
-    };
-
-    return () => {
-      ws.current?.close();
-    };
-  }, [roomId, token, user]);
+    }
+  }, [lastMessage]);
 
   useEffect(() => {
-    const loadQueue = () => {
-      // Fetch queue
-      setTimeout(() => {
-        if (ws.current) {
-          // Send Sync-request
-          const playerEvent: PlayerEvent = {
-            room: roomId,
-            event: 'sync-queue',
-            user: user,
-            time: 0,
-            url: null,
-          };
+    console.log('Socket Readystate:', readyState);
+    if (readyState === ReadyState.OPEN) {
+      // Send Sync-request
+      const playerEvent: PlayerEvent = {
+        room: roomId,
+        event: 'sync-queue',
+        user: user,
+        time: 0,
+        url: null,
+      };
 
-          ws.current.send(JSON.stringify(playerEvent));
+      sendMessage(JSON.stringify(playerEvent));
+    }
+  }, [readyState]);
 
-          setLoading(false);
-        } else {
-          loadQueue();
-        }
-      }, 1500);
+  const ws = useRef<WebSocket | null>(null);
+
+  const deleteQueueItem = useCallback(
+    (item: QueueItem) => {
+      if (readyState !== ReadyState.OPEN) {
+        // Display Error message
+        return;
+      }
+      const playerEvent: PlayerEvent = {
+        room: roomId,
+        event: 'delete-video',
+        user: user,
+        time: 0,
+        url: item.url,
+      };
+
+      sendMessage(JSON.stringify(playerEvent));
+    },
+    [queueItems, roomId, user],
+  );
+
+  const playQueueItem = (item: QueueItem) => {
+    if (readyState !== ReadyState.OPEN) {
+      // Display Error message
+      return;
+    }
+
+    const playerEvent: PlayerEvent = {
+      room: roomId,
+      event: 'play-video',
+      user: user,
+      time: 0,
+      url: item.url,
     };
 
-    loadQueue();
-  }, [roomId, token, user]);
+    console.log('Requesting video play:', playerEvent);
+
+    sendMessage(JSON.stringify(playerEvent));
+  };
 
   return (
     <div className='2xl:w-[450px] !z-[0]'>
@@ -156,10 +122,13 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
         </div>
         <div className='overflow-scroll min-h-[150px] max-h-[67vh] bg-neutral-950/50 m-1 rounded-lg'>
           <div className='grid grid-cols-1 gap-[2px]'>
-            {loading && <p className='pb-5 text-green-500'>Loading...</p>}
+            {readyState !== ReadyState.OPEN && (
+              <p className='pb-5 text-green-500'>Loading...</p>
+            )}
             {queueItems.map((item, index) => (
               <a
                 onClick={() => playQueueItem(item)}
+                href='#'
                 key={index}
                 className='cursor-pointer'
               >
@@ -176,7 +145,7 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
                     </p>
                   </div>
                   <div className='w-10 h-14 flex items-center text-white absolute right-0'>
-                    <a onClick={() => deleteQueueItem(index, item)}>
+                    <a href='#' onClick={() => deleteQueueItem(item)}>
                       <p className='text-red-600'>✕</p>
                     </a>
                   </div>
