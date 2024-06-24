@@ -1,12 +1,6 @@
 import { AuthContext } from '@/context/AuthContext';
 import { PlayerEvent, QueueEvent } from '@/types/events';
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 interface QueueItem {
@@ -71,8 +65,6 @@ const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
       sendMessage(JSON.stringify(playerEvent));
     }
   }, [readyState]);
-
-  const ws = useRef<WebSocket | null>(null);
 
   const deleteQueueItem = useCallback(
     (item: QueueItem) => {
