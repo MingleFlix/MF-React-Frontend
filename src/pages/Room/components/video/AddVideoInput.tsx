@@ -1,11 +1,18 @@
+import { AuthContext } from '@/context/AuthContext';
 import { PlayerEvent } from '@/types/events';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 
-const AddVideoInput: React.FC = () => {
-  // =========================
-  // To-Do: Use actual room id
-  const ROOM_ID = '1';
-  // =========================
+const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
+  // Auth
+  const authContext = useContext(AuthContext);
+  const { auth } = authContext;
+
+  // Check is temporary for dev purposes
+  const user = auth
+    ? auth.userId
+    : (Math.random() + 1).toString(36).substring(7);
+
+  const token = auth ? auth.token : 'test-token';
 
   const [inputValue, setInputValue] = useState<string>('');
   const ws = useRef<WebSocket | null>(null);
@@ -17,7 +24,7 @@ const AddVideoInput: React.FC = () => {
   useEffect(() => {
     // Create URL used for websocket
     var webSocketUrl = new URL(
-      `/api/video-management?roomID=${ROOM_ID}&type=input`,
+      `/api/video-management?roomID=${roomId}&type=input&token=${token}`,
       window.location.href,
     );
 
@@ -47,7 +54,7 @@ const AddVideoInput: React.FC = () => {
 
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       const playerEvent: PlayerEvent = {
-        room: ROOM_ID,
+        room: roomId,
         event: 'add-video',
         user: '',
         time: 0,
