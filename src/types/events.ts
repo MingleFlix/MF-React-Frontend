@@ -12,3 +12,15 @@ export interface PlayerEvent {
   time: number | null;
   url: string | null;
 }
+
+export interface QueueItem {
+  user: string;
+  url: string;
+  active: boolean;
+}
+
+export interface QueueEvent {
+  room: string;
+  event: string;
+  items: Array<QueueItem> | null;
+}

@@ -17,7 +17,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   // Check is temporary for dev purposes
   const user = auth
-    ? auth.userId
+    ? auth.username
     : (Math.random() + 1).toString(36).substring(7);
 
   const token = auth ? auth.token : 'test-token';
@@ -25,7 +25,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   console.log('Room:', roomId, 'User:', user, 'Token:', token);
 
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
-  const [error, setError] = React.useState<string>('');
+  const [error, setError] = useState<string>('');
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
   const wsRef = useRef<WebSocket | null>(null);
@@ -358,11 +358,11 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     };
 
     // Default video
-    // setTimeout(() => {
-    //   initPlayer(
-    //     'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
-    //   );
-    // }, 200);
+    setTimeout(() => {
+      initPlayer(
+        'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+      );
+    }, 200);
 
     wsRef.current.onmessage = event => {
       const playerEvent = JSON.parse(event.data) as PlayerEvent;
@@ -413,7 +413,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
           firstEvent = playerEvent;
           setTimeout(() => (sendEvent = true), 500);
           break;
-        case 'add-video':
+        case 'play-video':
           player?.destroy();
           initPlayer(playerEvent.url);
           break;

@@ -9,7 +9,7 @@ const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   // Check is temporary for dev purposes
   const user = auth
-    ? auth.userId
+    ? auth.username
     : (Math.random() + 1).toString(36).substring(7);
 
   const token = auth ? auth.token : 'test-token';
@@ -56,7 +56,7 @@ const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
       const playerEvent: PlayerEvent = {
         room: roomId,
         event: 'add-video',
-        user: '',
+        user: user,
         time: 0,
         url: inputValue,
       };
@@ -69,7 +69,7 @@ const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
   };
 
   return (
-    <div className='relative mb-6 bg-[#292929] border-sky-600 hover:border-sky-400 transition duration-400 ease-in-out border-b-[2px] rounded-lg'>
+    <div className='relative mb-4 bg-[#292929] border-sky-600 hover:border-sky-400 transition duration-400 ease-in-out border-b-[2px] rounded-lg sm:px-2 lg:px-4'>
       <input
         type='url'
         className='block min-h-[auto] w-full rounded border-0 bg-transparent px-3 py-[0.32rem] leading-[2.15] outline-none text-white/80'
