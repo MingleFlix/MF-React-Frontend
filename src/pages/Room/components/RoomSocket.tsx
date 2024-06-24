@@ -62,6 +62,7 @@ export function RoomSocket({
 
   return (
     <>
+      <h1>Room: {room?.name ?? 'loading...'}</h1>
       <div id='room-actions'>
         <div
           id='debug'

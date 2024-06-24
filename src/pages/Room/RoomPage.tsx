@@ -24,7 +24,6 @@ export default function RoomPage() {
 
   return (
     <div id='room-page'>
-      <h1>Room: {roomId}</h1>
       <RoomSocket roomId={roomId} token={auth.token} />
     </div>
   );
