@@ -52,6 +52,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
       const decodedToken = decodeToken(token);
       const { email, userId, username, role } = decodedToken;
 
+      if (checkExpiration(decodedToken.exp)) {
+        console.error('Token expired');
+        setAuth(null);
+        return;
+      }
+
       setAuth({ token, userId, email, username, role });
     } catch (error) {
       console.error('Invalid token');
@@ -83,4 +89,8 @@ const decodeToken = (token: string) => {
   } catch (error) {
     return null;
   }
+};
+
+const checkExpiration = (exp: number) => {
+  return Date.now() >= exp * 1000;
 };
