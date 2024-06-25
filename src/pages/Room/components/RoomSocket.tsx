@@ -10,7 +10,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import userPlaceholder from '@/assets/user-placeholder.webp';
 import { Room } from '@/types/room.ts';
 import { useNavigate } from 'react-router-dom';
-import { WatchComponent } from '@/pages/Room/components/WatchComponent.tsx';
 
 export function RoomSocket({
   roomId,
@@ -117,7 +116,7 @@ export function RoomSocket({
         </div>
       </div>
       <div id='room-content'>
-        {<WatchComponent roomId={roomId}></WatchComponent>}
+        {/*{<WatchComponent roomId={roomId}></WatchComponent>}*/}
       </div>
     </>
   );
