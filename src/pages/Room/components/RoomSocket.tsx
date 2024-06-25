@@ -9,7 +9,8 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import React, { useCallback, useEffect, useState } from 'react';
 import userPlaceholder from '@/assets/user-placeholder.webp';
 import { Room } from '@/types/room.ts';
-import { WatchComponent } from './WatchComponent';
+import { useNavigate } from 'react-router-dom';
+import { WatchComponent } from '@/pages/Room/components/WatchComponent.tsx';
 
 export function RoomSocket({
   roomId,
@@ -20,6 +21,7 @@ export function RoomSocket({
 }) {
   /* Room logic */
   const [room, setRoom] = useState<Room>(null);
+  const navigate = useNavigate();
 
   /* WebSocket logic */
   //Public API that will echo messages sent to it back to the client
@@ -42,6 +44,26 @@ export function RoomSocket({
       if (data.type === 'ROOM_STATE') {
         console.log('Room state:', data.room);
         setRoom(data.room);
+      } else if (data.type === 'NOT_FOUND') {
+        console.error('Room not found');
+        navigate('/');
+      } else if (data.type === 'USER_JOINED') {
+        console.log('User joined:', data.user);
+        setRoom(prev => ({
+          ...prev,
+          users: data.users,
+        }));
+      } else if (data.type === 'USER_LEFT') {
+        console.log('User left:', data.user);
+        setRoom(prev => ({
+          ...prev,
+          users: data.users,
+        }));
+      } else if (data.type === 'UNAUTHORIZED') {
+        console.error(data.message);
+        navigate('/login');
+      } else {
+        console.error('Unknown message:', data);
       }
     }
   }, [lastMessage]);
@@ -73,14 +95,21 @@ export function RoomSocket({
         </div>
         <div id='users'>
           <Heading>Users</Heading>
-          <div id='user-list' className='flex gap-2'>
+          <div
+            id='user-list'
+            className=' p-2 gap-2 items-center w-full justify-center flex'
+          >
             {room?.users.map(user => (
-              <Card key={user.id}>
+              <Card key={user.id} className='w-32'>
                 <CardHeader>
                   <CardTitle>{user.name}</CardTitle>
                 </CardHeader>
                 <CardContent className='flex flex-col items-center '>
-                  <img src={userPlaceholder} width={56} />
+                  <img
+                    src={userPlaceholder}
+                    width={56}
+                    alt='user profile picture'
+                  />
                 </CardContent>
               </Card>
             ))}
