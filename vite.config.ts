@@ -25,6 +25,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api/chat': {
+        target: 'ws://localhost:3003',
+        rewrite: path => path.replace(/^\/api\/chat/, ''),
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   plugins: [react()],

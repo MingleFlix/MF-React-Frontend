@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import userPlaceholder from '@/assets/user-placeholder.webp';
 import { Room } from '@/types/room.ts';
 import { useNavigate } from 'react-router-dom';
+import { WatchComponent } from './WatchComponent';
 
 export function RoomSocket({
   roomId,
