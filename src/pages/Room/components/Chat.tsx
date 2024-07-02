@@ -122,7 +122,10 @@ export function Chat({ roomId }: ChatProps) {
         {messages.map(message => {
           const ts = new Date(message.timestamp);
           return (
-            <div className='flex flex-col bg-gray-600 p-2'>
+            <div
+              className='flex flex-col bg-gray-600 p-2'
+              key={message.timestamp.toString()}
+            >
               <div className='flex gap-1 text-xs text-gray-400 font-bold'>
                 <span>{`${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`}</span>
               </div>
