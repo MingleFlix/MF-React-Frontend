@@ -15,11 +15,8 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   // Auth
   const authContext = useContext(AuthContext);
   const { auth } = authContext;
-
-  // Check is temporary for dev purposes
-  const user = (Math.random() + 1).toString(36).substring(7);
-
-  const token = auth ? auth.token : 'test-token';
+const user = auth.username;
+  const token = auth.token;
 
   console.log('Room:', roomId, 'User:', user, 'Token:', token);
 
