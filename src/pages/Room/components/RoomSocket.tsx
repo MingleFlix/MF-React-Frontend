@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import userPlaceholder from '@/assets/user-placeholder.webp';
 import { Room } from '@/types/room.ts';
 import { useNavigate } from 'react-router-dom';
-import { WatchComponent } from './WatchComponent';
+import { WatchComponent } from '@/pages/Room/components/WatchComponent.tsx';
 
 export function RoomSocket({
   roomId,
@@ -37,9 +37,8 @@ export function RoomSocket({
     if (lastMessage !== null) {
       setMessageHistory(prev => prev.concat(lastMessage));
 
-      console.log(lastMessage);
-
       const data = JSON.parse(lastMessage.data);
+      console.log('New message: \n', data);
 
       if (data.type === 'ROOM_STATE') {
         console.log('Room state:', data.room);
@@ -117,7 +116,7 @@ export function RoomSocket({
         </div>
       </div>
       <div id='room-content'>
-        {/*{<WatchComponent roomId={roomId}></WatchComponent>}*/}
+        {<WatchComponent roomId={roomId}></WatchComponent>}
       </div>
     </>
   );
