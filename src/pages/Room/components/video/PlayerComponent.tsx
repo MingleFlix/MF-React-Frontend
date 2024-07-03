@@ -15,7 +15,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   // Auth
   const authContext = useContext(AuthContext);
   const { auth } = authContext;
-const user = auth.username;
+  const user = auth.username;
   const token = auth.token;
 
   console.log('Room:', roomId, 'User:', user, 'Token:', token);
@@ -25,21 +25,16 @@ const user = auth.username;
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
 
+  // Mutable refs to avoid re-renders
+  const sendEventRef = useRef(true);
+  const firstEventRef = useRef<PlayerEvent | null>(null);
+
   // Socket
   const [socketUrl] = useState(
     `/api/video-management?roomID=${roomId}&type=player&token=${token}`,
   );
 
   const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
-
-  // We have to block sending events,
-  // because receiving player events causing it to send events
-  // resulting in an endless loop of events being broadcasted
-  let sendEvent = true;
-
-  // When joining the room, we ask all other members what the current event is
-  // We store this "first" event we received here, so we can intialize the player
-  let firstEvent: PlayerEvent = null;
 
   const setCanvasDimension = useCallback(
     (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
@@ -66,15 +61,15 @@ const user = auth.username;
     video: HTMLVideoElement,
   ) => {
     // When resizing the window we also need to resize the canvas for ambient mode
-    setCanvasDimension(canvas!, video);
+    setCanvasDimension(canvas, video);
     if (video.paused) {
-      paintStaticVideo(ctx!, video);
+      paintStaticVideo(ctx, video);
     }
   };
 
   const sendPlayerEventToServer = useCallback(
     (event: string, time: number, url: string, override = false) => {
-      if (!sendEvent && !override) return;
+      if (!sendEventRef.current && !override) return;
       const eventToSend: PlayerEvent = {
         room: roomId,
         event,
@@ -85,7 +80,7 @@ const user = auth.username;
 
       sendMessage(JSON.stringify(eventToSend));
     },
-    [roomId, sendEvent, user],
+    [roomId, sendMessage, user],
   );
 
   const generateVideoSource = useCallback((source: string): Plyr.SourceInfo => {
@@ -137,7 +132,7 @@ const user = auth.username;
 
     setCanvasDimension(canvas!, video);
     paintStaticVideo(ctx!, video);
-    window.addEventListener('resize', () => handleResize(canvas, ctx, video));
+    window.addEventListener('resize', () => handleResize(canvas!, ctx!, video));
 
     // Event Listener for play event
     player.on('play', () => {
@@ -154,15 +149,15 @@ const user = auth.username;
       const currentTime = player.currentTime;
       console.log('Video started at ' + currentTime);
 
-      if (firstEvent == null) {
+      if (firstEventRef.current == null) {
         // @ts-ignore
         sendPlayerEventToServer('play', currentTime, player.source);
       } else {
-        sendEvent = false;
+        sendEventRef.current = false;
 
-        player.currentTime = firstEvent.time;
+        player.currentTime = firstEventRef.current.time;
 
-        firstEvent.event.includes('sync-ack-play')
+        firstEventRef.current.event.includes('sync-ack-play')
           ? player.play()
           : player.pause();
 
@@ -170,53 +165,19 @@ const user = auth.username;
         sendPlayerEventToServer('re-sync', 0, null, true);
 
         setTimeout(() => {
-          sendEvent = true;
+          sendEventRef.current = true;
         }, 500);
       }
 
-      firstEvent = null;
+      firstEventRef.current = null;
     });
 
     // Event Listener for pause event
     player.on('pause', () => {
       console.log('Video stopped at ' + player.currentTime);
       // @ts-ignore
-      sendPlayerEventToServer('pause', player.currentTime, player.source);
+      sendPlayerEventToServer('pause', player.currentTime, player.source, false);
     });
-
-    // player.on('statechange', (event: any) => {
-    //   const youtubeState = event.detail.code;
-    //   if (!sendEvent) return;
-    //   console.log('=== YouTube State Changed ===');
-
-    //   sendEvent = false;
-
-    //   if (youtubeState === 1) {
-    //     if (firstEvent == null) {
-    //       // @ts-ignore
-    //       sendPlayerEventToServer(
-    //         'play',
-    //         player.currentTime,
-    //         player.source as unknown as string,
-    //         true,
-    //       );
-    //     }
-    //   }
-
-    //   if (youtubeState === 2) {
-    //     // @ts-ignore
-    //     sendPlayerEventToServer(
-    //       'pause',
-    //       player.currentTime,
-    //       player.source as unknown as string,
-    //       true,
-    //     );
-    //   }
-
-    //   setTimeout(() => {
-    //     sendEvent = true;
-    //   }, 1500);
-    // });
 
     // Add custom double tap logic
     player.on('ready', () => {
@@ -224,7 +185,7 @@ const user = auth.username;
     });
   };
 
-  // Code Source: https://github.com/sampotts/plyr/issues/2156#issuecomment-1256708414
+    // Code Source: https://github.com/sampotts/plyr/issues/2156#issuecomment-1256708414
   // Slightly adjusted for typescript
   function doubleClick(player: any) {
     const byClass = document.getElementsByClassName.bind(document),
@@ -373,10 +334,10 @@ const user = auth.username;
         return;
 
       const handleReceivedPlayerEvents = (playerEvent: PlayerEvent) => {
-        sendEvent = false;
+        sendEventRef.current = false;
         player.currentTime = playerEvent.time;
         playerEvent.event.includes('play') ? player.play() : player.pause();
-        setTimeout(() => (sendEvent = true), 500);
+        setTimeout(() => (sendEventRef.current = true), 500);
       };
 
       switch (playerEvent.event) {
@@ -400,7 +361,7 @@ const user = auth.username;
           if (!player) return;
           player.playing
             ? // @ts-ignore
-              sendPlayerEventToServer('play', player.currentTime, player.source)
+             sendPlayerEventToServer('play', player.currentTime, player.source)
             : sendPlayerEventToServer(
                 'pause',
                 player.currentTime,
@@ -411,10 +372,10 @@ const user = auth.username;
         case 'sync-ack-play':
         case 'sync-ack-pause':
           if (player) return;
-          sendEvent = false;
+          sendEventRef.current = false;
           initPlayer(playerEvent.url);
-          firstEvent = playerEvent;
-          setTimeout(() => (sendEvent = true), 500);
+          firstEventRef.current = playerEvent;
+          setTimeout(() => (sendEventRef.current = true), 500);
           break;
         case 'play-video':
           player?.destroy();
@@ -428,13 +389,13 @@ const user = auth.username;
           break;
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, sendPlayerEventToServer, user]);
 
   useEffect(() => {
     console.log('Socket Readystate:', readyState);
     if (readyState === ReadyState.OPEN) {
       // Sync request
-      sendPlayerEventToServer('sync', 0, null);
+      sendPlayerEventToServer('sync', 0, null, true);
 
       // Default video
       setTimeout(() => {
@@ -443,7 +404,7 @@ const user = auth.username;
         );
       }, 200);
     }
-  }, [readyState]);
+  }, [readyState, sendPlayerEventToServer]);
 
   return (
     <div className='relative z-[1]'>
