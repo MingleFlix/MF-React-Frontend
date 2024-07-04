@@ -35,6 +35,11 @@ export const router = createBrowserRouter([
         loader: roomLoader,
       },
       {
+        path: 'user/:userId',
+        element: <ProtectedRoute children={<div>User Profile</div>} />,
+        loader: userLoader,
+      },
+      {
         path: 'dev',
         element: <Dev />,
       },

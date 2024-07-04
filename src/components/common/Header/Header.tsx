@@ -33,15 +33,20 @@ const Header: React.FC = () => {
             </Link>
           </>
         ) : (
-          <a
-            onClick={() => {
-              authContext.logout();
-              navigate('/');
-            }}
-            className='mr-[10px] text-white'
-          >
-            Logout
-          </a>
+          <>
+            <a
+              onClick={() => {
+                authContext.logout();
+                navigate('/');
+              }}
+              className='mr-[10px] text-white'
+            >
+              Logout
+            </a>
+            <Link to={`/user/${auth.userId}`} className='mr-[10px] text-white'>
+              Profile
+            </Link>
+          </>
         )}
       </nav>
     </header>
