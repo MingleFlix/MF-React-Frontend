@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AuthContext } from '@/context/AuthContext';
-import { Login } from '../Login';
+import { Register } from '../Register';
 import '@testing-library/jest-dom';
 
 // Mock auth context
@@ -25,32 +25,37 @@ global.fetch = jest.fn(() =>
   }),
 ) as jest.Mock;
 
-describe('Login component', () => {
-  it('renders login form', () => {
+describe('Register component', () => {
+  it('renders register form', () => {
     render(
       <AuthContext.Provider value={mockAuthContext}>
-        <Login />
+        <Register />
       </AuthContext.Provider>,
     );
 
+    expect(screen.getByPlaceholderText('Username')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Email address')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
-    expect(screen.getByText('Sign in')).toBeInTheDocument();
+    expect(screen.getByText('Already registered?')).toBeInTheDocument();
+    expect(screen.getAllByText('Register')).toHaveLength(2);
   });
 
   it('handles form input correctly', () => {
     render(
       <AuthContext.Provider value={mockAuthContext}>
-        <Login />
+        <Register />
       </AuthContext.Provider>,
     );
 
+    const userInput = screen.getByPlaceholderText('Username');
     const emailInput = screen.getByPlaceholderText('Email address');
     const passwordInput = screen.getByPlaceholderText('Password');
 
+    fireEvent.change(userInput, { target: { value: 'testuser' } });
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
+    expect(userInput).toHaveValue('testuser');
     expect(emailInput).toHaveValue('test@example.com');
     expect(passwordInput).toHaveValue('password123');
   });
@@ -58,32 +63,36 @@ describe('Login component', () => {
   it('submits the form successfully', async () => {
     render(
       <AuthContext.Provider value={mockAuthContext}>
-        <Login />
+        <Register />
       </AuthContext.Provider>,
     );
 
+    const userInput = screen.getByPlaceholderText('Username');
     const emailInput = screen.getByPlaceholderText('Email address');
     const passwordInput = screen.getByPlaceholderText('Password');
-    const submitButton = screen.getByText('Sign in');
+    const submitButton = screen.getAllByText('Register')[1];
 
+    fireEvent.change(userInput, { target: { value: 'testuser' } });
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
     fireEvent.click(submitButton);
 
     await waitFor(() =>
-      expect(fetch).toHaveBeenCalledWith('/api/user-management/login', {
-        body: '{"email":"test@example.com","password":"password123"}',
+      expect(fetch).toHaveBeenCalledWith('/api/user-management/register', {
+        body: '{"username":"testuser","email":"test@example.com","password":"password123"}',
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
       }),
     );
     await waitFor(() =>
-      expect(screen.getByText('Login successful!')).toBeInTheDocument(),
+      expect(
+        screen.getByText('Successfully registered. You may now login!'),
+      ).toBeInTheDocument(),
     );
   });
 
-  it('displays an error message on failed login', async () => {
+  it('displays an error message on failed register', async () => {
     (global.fetch as jest.Mock).mockImplementationOnce(() =>
       Promise.resolve({
         ok: false,
@@ -92,21 +101,23 @@ describe('Login component', () => {
 
     render(
       <AuthContext.Provider value={mockAuthContext}>
-        <Login />
+        <Register />
       </AuthContext.Provider>,
     );
 
+    const userInput = screen.getByPlaceholderText('Username');
     const emailInput = screen.getByPlaceholderText('Email address');
     const passwordInput = screen.getByPlaceholderText('Password');
-    const submitButton = screen.getByText('Sign in');
+    const submitButton = screen.getAllByText('Register')[1];
 
+    fireEvent.change(userInput, { target: { value: 'testuser' } });
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
     fireEvent.click(submitButton);
 
     await waitFor(() =>
       expect(
-        screen.getByText('Login failed. Please try again.'),
+        screen.getByText('Registration failed. Please try again.'),
       ).toBeInTheDocument(),
     );
   });
