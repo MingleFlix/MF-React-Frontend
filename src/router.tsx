@@ -4,9 +4,11 @@ import ErrorPage from '@/error-page.tsx';
 import { HomePage } from '@/pages/HomePage.tsx';
 import { Login } from '@/pages/Login.tsx';
 import { Register } from '@/pages/Register.tsx';
-import RoomPage, { loader as roomLoader } from '@/pages/Room/RoomPage.tsx';
+import RoomPage from '@/pages/Room/RoomPage.tsx';
+import { roomLoader } from '@/pages/Room/RoomLoader.ts';
 import Dev from '@/pages/Dev.tsx';
 import { ProtectedRoute } from '@/components/common/ProtectedRoute/ProtectedRoute.tsx';
+import { userLoader } from '@/pages/User/UserLoader.ts';
 
 export const router = createBrowserRouter([
   {

@@ -2,19 +2,10 @@ import { useLoaderData } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext.tsx';
 import { RoomSocket } from '@/pages/Room/components/RoomSocket.tsx';
-
-export async function loader({ params }) {
-  const roomId: string = params.roomId;
-  console.log(roomId);
-  return { roomId };
-}
-
-export interface LoaderData {
-  roomId: string;
-}
+import { RoomLoaderData } from '@/pages/Room/RoomLoader.ts';
 
 export default function RoomPage() {
-  const { roomId } = useLoaderData() as LoaderData;
+  const { roomId } = useLoaderData() as RoomLoaderData;
   const authContext = useContext(AuthContext);
   const { auth } = authContext;
 
