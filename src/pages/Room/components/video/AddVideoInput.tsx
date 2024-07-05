@@ -24,12 +24,7 @@ const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
   };
 
   const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter') {
-      return;
-    }
-
-    if (readyState !== ReadyState.OPEN) {
-      alert('No connection to Video Sync Service!');
+    if (event.key !== 'Enter' || readyState !== ReadyState.OPEN) {
       return;
     }
 
@@ -48,15 +43,29 @@ const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
     <div
       className={`relative mb-4 bg-[#292929] transition duration-400 ease-in-out border-b-[2px] rounded-lg sm:px-2 lg:px-4 ${readyState !== ReadyState.OPEN ? 'border-red-600 hover:border-red-400' : 'border-sky-600 hover:border-sky-400'}`}
     >
-      <input
-        type='url'
-        className='block min-h-[auto] w-full rounded border-0 bg-transparent px-3 py-[0.32rem] leading-[2.15] outline-none text-white/80'
-        name='videoUrl'
-        placeholder='Add Video URL'
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyPress}
-      />
+      {readyState === ReadyState.OPEN && (
+        <input
+          type='url'
+          className='block min-h-[auto] w-full rounded border-0 bg-transparent px-3 py-[0.32rem] leading-[2.15] outline-none text-white/80'
+          name='videoUrl'
+          placeholder='Add Video URL'
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyPress}
+        />
+      )}
+      {readyState !== ReadyState.OPEN && (
+        <input
+          type='url'
+          className='block min-h-[auto] w-full rounded border-0 bg-transparent px-3 py-[0.32rem] leading-[2.15] outline-none text-white/80 cursor-not-allowed'
+          name='videoUrl'
+          placeholder='No connection to server!'
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyPress}
+          disabled
+        />
+      )}
     </div>
   );
 };
