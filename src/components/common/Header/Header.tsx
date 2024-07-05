@@ -19,8 +19,8 @@ const Header: React.FC = () => {
         </Link>
       </h1>
       <nav>
-        <Link to='/about' className='mr-[10px] text-white'>
-          About
+        <Link to='/' className='mr-[10px] text-white'>
+          Home
         </Link>
         {/*<a href="/contact" style={{ color: 'white', textDecoration: 'none', margin: '0 10px' }}>Contact</a>*/}
         {!auth?.token ? (
@@ -34,6 +34,9 @@ const Header: React.FC = () => {
           </>
         ) : (
           <>
+            <Link to={`/user/${auth.userId}`} className='mr-[10px] text-white'>
+              Profile
+            </Link>
             <a
               onClick={() => {
                 authContext.logout();
@@ -43,9 +46,6 @@ const Header: React.FC = () => {
             >
               Logout
             </a>
-            <Link to={`/user/${auth.userId}`} className='mr-[10px] text-white'>
-              Profile
-            </Link>
           </>
         )}
       </nav>
