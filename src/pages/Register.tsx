@@ -25,7 +25,7 @@ export function Register() {
     event.preventDefault();
 
     try {
-      const response = await fetch('api/user-management/register', {
+      const response = await fetch('/api/user-management/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ export function Register() {
             className='p-10 bg-[#292929] rounded-lg'
             onSubmit={handleSubmit}
           >
-            <h2 className='text-4xl text-white p-5 pb-10'>Register</h2>
+            <h2 className='p-5 pb-10 text-4xl text-white'>Register</h2>
             {error && <p className='pb-5 text-red-500'>{error}</p>}
             {success && (
               <p className='pb-5 text-green-500'>
@@ -111,7 +111,7 @@ export function Register() {
               />
             </div>
 
-            <div className='mb-6 flex items-center justify-between float-right'>
+            <div className='flex float-right justify-between items-center mb-6'>
               <a href='/login' className='text-white'>
                 Already registered?
               </a>
