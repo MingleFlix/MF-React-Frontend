@@ -12,7 +12,6 @@ interface AuthContextType {
 
 interface AuthData {
   token: string;
-  role: string;
   username: string;
   userId: string;
   email: string;
@@ -24,7 +23,6 @@ interface AuthResponseData {
   iat: number;
   userId: string;
   username: string;
-  role: string;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -42,7 +40,6 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const token = Cookies.get('auth_token');
 
-    // console.log(token, role);
     if (token) {
       extractAndSetAuth(token);
     }
@@ -53,7 +50,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     try {
       // Throws InvalidTokenError, this way we check if it is even a valid token
       const decodedToken = decodeToken(token);
-      const { email, userId, username, role } = decodedToken;
+      const { email, userId, username } = decodedToken;
 
       if (checkExpiration(decodedToken.exp)) {
         console.error('Token expired');
@@ -61,7 +58,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      setAuth({ token, userId, email, username, role });
+      setAuth({ token, userId, email, username });
     } catch (error) {
       console.error('Invalid token');
       setAuth(null);
