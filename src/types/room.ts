@@ -1,10 +1,10 @@
 export interface Room {
   id: string;
   name: string;
-  users: User[];
+  users: RoomUser[];
 }
 
-export interface User {
+export interface RoomUser {
   id: string;
   name: string;
 }

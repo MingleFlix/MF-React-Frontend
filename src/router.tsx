@@ -9,6 +9,7 @@ import { roomLoader } from '@/pages/Room/RoomLoader.ts';
 import Dev from '@/pages/Dev.tsx';
 import { ProtectedRoute } from '@/components/common/ProtectedRoute/ProtectedRoute.tsx';
 import { userLoader } from '@/pages/User/UserLoader.ts';
+import UserPage from '@/pages/User/UserPage.tsx';
 
 export const router = createBrowserRouter([
   {
@@ -36,7 +37,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'user/:userId',
-        element: <ProtectedRoute children={<div>User Profile</div>} />,
+        element: <ProtectedRoute children={<UserPage />} />,
         loader: userLoader,
       },
       {
