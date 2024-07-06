@@ -1,40 +1,12 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
-import { PlayerEvent } from '@/types/events';
-import { AuthContext } from '@/context/AuthContext';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { VideoSocket } from './VideoSocket';
 
-const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
-  // Auth
-  const authContext = useContext(AuthContext);
-  const { auth } = authContext;
-  const user = auth.username;
-  const token = auth.token;
-
-  console.log('Room:', roomId, 'User:', user, 'Token:', token);
-
+const PlyrPlayerComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
-  const [error, setError] = useState<string>('');
   const playerRef = useRef<Plyr | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null); // canvas used for ambient mode
-
-  // Mutable refs to avoid re-renders
-  const sendEventRef = useRef(true);
-  const firstEventRef = useRef<PlayerEvent | null>(null);
-
-  // Socket
-  const [socketUrl] = useState(
-    `/api/video-management?roomID=${roomId}&type=player&token=${token}`,
-  );
-
-  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
   const setCanvasDimension = useCallback(
     (canvas: HTMLCanvasElement, video: HTMLVideoElement) => {
@@ -67,33 +39,7 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     }
   };
 
-  const sendPlayerEventToServer = useCallback(
-    (event: string, time: number, url: string, override = false) => {
-      if (!sendEventRef.current && !override) return;
-      const eventToSend: PlayerEvent = {
-        room: roomId,
-        event,
-        user,
-        time,
-        url,
-      };
-
-      sendMessage(JSON.stringify(eventToSend));
-    },
-    [roomId, sendMessage, user],
-  );
-
   const generateVideoSource = useCallback((source: string): Plyr.SourceInfo => {
-    // const youtubeRegex =
-    //   /(?:https?:\/\/)?(?:www\.)?youtu\.?be(?:\.com)?\/?.*(?:watch|embed)?(?:.*v=|v\/|\/)([\w\-_]+)\&?/i;
-    // const match = source.match(youtubeRegex);
-    // if (match) {
-    //   setAmbientMode(false);
-    //   return {
-    //     type: 'video',
-    //     sources: [{ src: match[1], provider: 'youtube' }],
-    //   };
-    // }
     return {
       type: 'video',
       sources: [{ src: source, type: 'video/mp4', size: 1080 }],
@@ -116,12 +62,12 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
       ],
     });
 
-    player.source = generateVideoSource(source);
+    playerRef.current = player;
+
+    playerRef.current.source = generateVideoSource(source);
 
     // To get autoplay working, we have to mute the player
-    player.volume = 0;
-
-    playerRef.current = player;
+    playerRef.current.volume = 0;
 
     // Canvas for player ambient mode
     const canvas = canvasRef.current;
@@ -135,57 +81,38 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
     window.addEventListener('resize', () => handleResize(canvas!, ctx!, video));
 
     // Event Listener for play event
-    player.on('play', () => {
+    playerRef.current.on('play', () => {
       setCanvasDimension(canvas!, video);
 
       // Main loop for ambient mode
       (function loop() {
-        if (!player.paused && !player.ended && ambientMode && video) {
+        if (
+          !playerRef.current.paused &&
+          !playerRef.current.ended &&
+          ambientMode &&
+          video
+        ) {
           ctx.drawImage(video, 0, 0, video.offsetWidth, video.offsetHeight);
           setTimeout(loop, 24000 / 1001); // drawing at 23.976fps
         }
       })();
 
-      const currentTime = player.currentTime;
+      const currentTime = playerRef.current.currentTime;
       console.log('Video started at ' + currentTime);
-
-      if (firstEventRef.current == null) {
-        // @ts-ignore
-        sendPlayerEventToServer('play', currentTime, player.source);
-      } else {
-        sendEventRef.current = false;
-
-        player.currentTime = firstEventRef.current.time;
-
-        firstEventRef.current.event.includes('sync-ack-play')
-          ? player.play()
-          : player.pause();
-
-        // Re-request sync, as our client might be out of sync
-        sendPlayerEventToServer('re-sync', 0, null, true);
-
-        setTimeout(() => {
-          sendEventRef.current = true;
-        }, 500);
-      }
-
-      firstEventRef.current = null;
     });
 
-    // Event Listener for pause event
-    player.on('pause', () => {
-      console.log('Video stopped at ' + player.currentTime);
-      // @ts-ignore
-      sendPlayerEventToServer('pause', player.currentTime, player.source, false);
-    });
+    // @ts-ignore
+    window.player = playerRef.current;
 
     // Add custom double tap logic
-    player.on('ready', () => {
+    playerRef.current.on('ready', () => {
+      const event = new Event('plyrReady');
+      window.dispatchEvent(event);
       doubleClick(player);
     });
   };
 
-    // Code Source: https://github.com/sampotts/plyr/issues/2156#issuecomment-1256708414
+  // Code Source: https://github.com/sampotts/plyr/issues/2156#issuecomment-1256708414
   // Slightly adjusted for typescript
   function doubleClick(player: any) {
     const byClass = document.getElementsByClassName.bind(document),
@@ -326,93 +253,20 @@ const PlyrVideoPlayer: React.FC<{ roomId: string }> = ({ roomId }) => {
   }
 
   useEffect(() => {
-    if (lastMessage !== null) {
-      const playerEvent = JSON.parse(lastMessage.data) as PlayerEvent;
-      const player = playerRef.current;
-
-      if (playerEvent.user === user && playerEvent.event !== 'play-video')
-        return;
-
-      const handleReceivedPlayerEvents = (playerEvent: PlayerEvent) => {
-        sendEventRef.current = false;
-        player.currentTime = playerEvent.time;
-        playerEvent.event.includes('play') ? player.play() : player.pause();
-        setTimeout(() => (sendEventRef.current = true), 500);
-      };
-
-      switch (playerEvent.event) {
-        case 'sync':
-          if (!player) return;
-          player.playing
-            ? sendPlayerEventToServer(
-                'sync-ack-play',
-                player.currentTime,
-                // @ts-ignore
-                player.source,
-              )
-            : sendPlayerEventToServer(
-                'sync-ack-pause',
-                player.currentTime,
-                // @ts-ignore
-                player.source,
-              );
-          break;
-        case 're-sync':
-          if (!player) return;
-          player.playing
-            ? // @ts-ignore
-             sendPlayerEventToServer('play', player.currentTime, player.source)
-            : sendPlayerEventToServer(
-                'pause',
-                player.currentTime,
-                // @ts-ignore
-                player.source,
-              );
-          break;
-        case 'sync-ack-play':
-        case 'sync-ack-pause':
-          if (player) return;
-          sendEventRef.current = false;
-          initPlayer(playerEvent.url);
-          firstEventRef.current = playerEvent;
-          setTimeout(() => (sendEventRef.current = true), 500);
-          break;
-        case 'play-video':
-          player?.destroy();
-          initPlayer(playerEvent.url);
-          break;
-        case 'play':
-        case 'pause':
-          handleReceivedPlayerEvents(playerEvent);
-          break;
-        default:
-          break;
-      }
-    }
-  }, [lastMessage, sendPlayerEventToServer, user]);
-
-  useEffect(() => {
-    console.log('Socket Readystate:', readyState);
-    if (readyState === ReadyState.OPEN) {
-      // Sync request
-      sendPlayerEventToServer('sync', 0, null, true);
-
-      // Default video
-      setTimeout(() => {
-        initPlayer(
-          'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
-        );
-      }, 200);
-    }
-  }, [readyState, sendPlayerEventToServer]);
+    setTimeout(() => {
+      initPlayer(
+        'https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-1080p.mp4',
+      );
+    }, 200);
+  }, []);
 
   return (
     <div className='relative z-[1]'>
-      {error && <p className='pb-5 text-red-500'>{error}</p>}
       <canvas ref={canvasRef} className='decoy'></canvas>
       <video id='player' className='plyr-react plyr' playsInline />
+      <VideoSocket roomId={roomId} initPlayer={initPlayer} />
     </div>
   );
 };
 
-export default React.memo(PlyrVideoPlayer);
+export default React.memo(PlyrPlayerComponent);
