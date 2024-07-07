@@ -158,6 +158,12 @@ export function Chat({ roomId }: ChatProps) {
           multiple
           value={input}
           placeholder='Type message here...'
+          onKeyUp={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              sendMessage();
+            }
+          }}
           onChange={e => setInput(e.target.value)}
         />
         <button
