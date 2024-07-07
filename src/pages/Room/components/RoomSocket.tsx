@@ -12,6 +12,11 @@ import { Room } from '@/types/room.ts';
 import { useNavigate } from 'react-router-dom';
 import { WatchComponent } from '@/pages/Room/components/WatchComponent.tsx';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export function RoomSocket({
   roomId,
   token,

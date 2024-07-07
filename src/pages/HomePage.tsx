@@ -1,5 +1,10 @@
 import HeroSection from '../components/layout/heroSection/HeroSection.tsx';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export function HomePage() {
   return (
     <div className='h-[95vh]'>

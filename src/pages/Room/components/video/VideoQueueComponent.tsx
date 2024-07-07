@@ -1,13 +1,12 @@
 import { AuthContext } from '@/context/AuthContext';
-import { PlayerEvent, QueueEvent } from '@/types/events';
+import { PlayerEvent, QueueEvent, QueueItem } from '@/types/events';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
-interface QueueItem {
-  user: string;
-  url: string;
-  active: boolean;
-}
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
 
 const VideoQueueComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
   // Auth

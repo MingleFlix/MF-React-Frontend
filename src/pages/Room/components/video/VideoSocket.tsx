@@ -1,9 +1,13 @@
 import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-
 import { PlayerEvent } from '@/types/events';
 import { AuthContext } from '@/context/AuthContext';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import Plyr from 'plyr';
+
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
 
 export function VideoSocket({
   roomId,

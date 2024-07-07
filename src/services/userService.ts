@@ -1,5 +1,10 @@
 import { UserWithRoles } from '@/types/user.ts';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 /**
  * Fetches user data by ID.
  * @param userId The ID of the user to fetch.

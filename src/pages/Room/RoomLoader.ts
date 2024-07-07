@@ -1,5 +1,10 @@
 import { LoaderFunction } from 'react-router-dom';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export type RoomLoaderData = {
   roomId: string;
 };

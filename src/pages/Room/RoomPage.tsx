@@ -4,6 +4,11 @@ import { AuthContext } from '@/context/AuthContext.tsx';
 import { RoomSocket } from '@/pages/Room/components/RoomSocket.tsx';
 import { RoomLoaderData } from '@/pages/Room/RoomLoader.ts';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export default function RoomPage() {
   const { roomId } = useLoaderData() as RoomLoaderData;
   const authContext = useContext(AuthContext);

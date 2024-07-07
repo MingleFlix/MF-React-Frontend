@@ -3,6 +3,11 @@ import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import z from 'zod';
 
+/*
+ * Author: Pham Van Nguyen
+ * Matrikelnummer: 2507925
+ */
+
 const BroadcastMessageEventSchema = z.object({
   type: z.literal('broadcast'),
   timestamp: z.string().datetime(),

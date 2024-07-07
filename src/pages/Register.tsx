@@ -1,5 +1,10 @@
 import React from 'react';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 interface FormData {
   username: string;
   email: string;

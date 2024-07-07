@@ -1,6 +1,11 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '@/context/AuthContext.tsx';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 interface FormData {
   email: string;
   password: string;

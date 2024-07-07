@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 test('End-to-End Test', async ({ page }) => {
   // Register
   await page.goto('http://localhost:5173/');

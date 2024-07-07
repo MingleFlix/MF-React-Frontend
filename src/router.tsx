@@ -11,6 +11,11 @@ import { ProtectedRoute } from '@/components/common/ProtectedRoute/ProtectedRout
 import { userLoader } from '@/pages/User/UserLoader.ts';
 import UserPage from '@/pages/User/UserPage.tsx';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export const router = createBrowserRouter([
   {
     path: '/',

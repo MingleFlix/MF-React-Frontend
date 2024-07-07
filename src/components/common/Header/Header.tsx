@@ -2,6 +2,11 @@ import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '@/context/AuthContext.tsx';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 const Header: React.FC = () => {
   const authContext = useContext(AuthContext);
   const navigate = useNavigate(); // Add this line
@@ -13,7 +18,7 @@ const Header: React.FC = () => {
 
   return (
     <header className='flex w-full text-white bg-[#292929] justify-between items-center p-3 border-b-[1px] border-sky-600'>
-      <h1 className='font-medium text-4xl'>
+      <h1 className='text-4xl font-medium'>
         <Link className='text-white' to='/'>
           MingleFlix
         </Link>

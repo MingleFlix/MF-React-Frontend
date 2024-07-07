@@ -3,6 +3,14 @@ import PlyrPlayerComponent from './video/PlyrPlayerComponent';
 import VideoQueueComponent from './video/VideoQueueComponent';
 import { Chat } from '@/pages/Room/components/Chat.tsx';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ *
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 export function WatchComponent(props: { roomId: string }) {
   return (
     <section id='about' className='h-[95vh]' style={{ padding: '0px 50px' }}>

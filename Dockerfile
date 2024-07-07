@@ -1,3 +1,8 @@
+# ===========================
+# Author: Jesse Günzl
+# Matrikelnummer: 2577166
+# ===========================
+
 # Build
 FROM node:21-alpine as build
 WORKDIR /usr/app

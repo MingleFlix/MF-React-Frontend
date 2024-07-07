@@ -3,6 +3,11 @@ import Plyr from 'plyr';
 import 'plyr/dist/plyr.css';
 import { VideoSocket } from './VideoSocket';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 const PlyrPlayerComponent: React.FC<{ roomId: string }> = ({ roomId }) => {
   const [ambientMode, setAmbientMode] = useState(true); // Toggle player ambient mode
   const playerRef = useRef<Plyr | null>(null);

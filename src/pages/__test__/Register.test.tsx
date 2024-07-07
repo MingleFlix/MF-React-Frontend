@@ -3,6 +3,11 @@ import { AuthContext } from '@/context/AuthContext';
 import { Register } from '../Register';
 import '@testing-library/jest-dom';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 // Mock auth context
 const mockAuthContext = {
   auth: {

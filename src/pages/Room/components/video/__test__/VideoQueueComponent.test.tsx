@@ -5,6 +5,11 @@ import '@testing-library/jest-dom';
 import VideoQueueComponent from '../VideoQueueComponent';
 import { QueueEvent } from '@/types/events';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 // Mock the useWebSocket hook
 jest.mock('react-use-websocket', () => ({
   __esModule: true,

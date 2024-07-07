@@ -1,7 +1,15 @@
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 export interface PlayerEvent {
   /*
    * room: room id
-   * event: play | pause | seeked
+   * event:
+   *    play | pause | sync |
+   *    sync-ack-play | sync-ack-pause |
+   *    re-sync | play-video
    * user: name
    * time: video current time
    * url: video url
@@ -14,13 +22,23 @@ export interface PlayerEvent {
 }
 
 export interface QueueItem {
+  /*
+   * user: name
+   * url: video url
+   * active: video currently being played
+   */
   user: string;
   url: string;
   active: boolean;
 }
 
 export interface QueueEvent {
-  room: string;
+  /*
+   * room: room id
+   * event: add-video | delete-video | sync-queue
+   * items: QueueItem[0..*]
+   */
+  room: string | null;
   event: string;
-  items: Array<QueueItem> | null;
+  items: Array<QueueItem>;
 }

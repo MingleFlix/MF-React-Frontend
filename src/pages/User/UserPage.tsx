@@ -7,6 +7,11 @@ import { Edit2, Trash2 } from 'lucide-react';
 import { fetchUserDataById } from '@/services/userService.ts';
 import { UserWithRoles } from '@/types/user.ts';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 export default function UserPage() {
   const { userId } = useLoaderData() as UserLoaderData;
   const [user, setUser] = useState<UserWithRoles>(null);
@@ -25,8 +30,8 @@ export default function UserPage() {
   }
 
   return (
-    <div className='flex flex-col w-full items-center gap-y-4'>
-      <Card className='bg-opacity-10 bg-white'>
+    <div className='flex flex-col gap-y-4 items-center w-full'>
+      <Card className='bg-white bg-opacity-10'>
         <CardHeader>
           <Heading> Profile</Heading>
         </CardHeader>
@@ -34,32 +39,32 @@ export default function UserPage() {
           <table className='min-w-full leading-normal'>
             <thead>
               <tr>
-                <th className='px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                <th className='px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200'>
                   Username
                 </th>
-                <th className='px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                <th className='px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200'>
                   Email
                 </th>
-                <th className='px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                <th className='px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200'>
                   Roles
                 </th>
-                <th className='px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider'>
+                <th className='px-5 py-3 text-xs font-semibold tracking-wider text-left text-gray-600 uppercase bg-gray-100 border-b-2 border-gray-200'>
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className='px-5 py-5 border-l border-b  border-gray-200  text-sm'>
+                <td className='px-5 py-5 text-sm border-b border-l border-gray-200'>
                   {user.username}
                 </td>
-                <td className='px-5 py-5 border-b  border-gray-200  text-sm'>
+                <td className='px-5 py-5 text-sm border-b border-gray-200'>
                   {user.email}
                 </td>
-                <td className='px-5 py-5 border-b border-gray-200  text-sm'>
+                <td className='px-5 py-5 text-sm border-b border-gray-200'>
                   {user.roles.map(role => role).join(', ')}
                 </td>
-                <td className='px-5 py-5 border-r border-b border-gray-200  text-sm'>
+                <td className='px-5 py-5 text-sm border-r border-b border-gray-200'>
                   <div className='flex items-center'>
                     <Edit2 className='mr-3 cursor-pointer' />
                     <Trash2 className='cursor-pointer' />

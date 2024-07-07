@@ -15,6 +15,11 @@ import { AuthContext } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast.ts';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 const HeroSection: React.FC = () => {
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
@@ -79,20 +84,20 @@ const HeroSection: React.FC = () => {
   };
 
   return (
-    <div className='relative text-center p-20 bg-gray-800 text-white overflow-hidden'>
+    <div className='overflow-hidden relative p-20 text-center text-white bg-gray-800'>
       <img
         src={heroImage}
         alt='Descriptive Alt Text'
-        className='absolute inset-0 w-full h-full object-cover z-0'
+        className='object-cover absolute inset-0 z-0 w-full h-full'
       />
-      <div className='absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75 z-10'></div>
+      <div className='absolute inset-0 z-10 bg-gradient-to-r from-purple-500 to-blue-500 opacity-75'></div>
       <div className='relative z-20'>
         <Heading>Watch Videos Together</Heading>
         <Text>Create your room, invite friends, and watch videos in sync.</Text>
-        <div className='mt-8 flex flex-col'>
+        <div className='flex flex-col mt-8'>
           {hideCreateForm ? (
             <Button
-              className='bg-blue-500 hover:bg-blue-700 text-white font-bold w-36 self-center'
+              className='self-center w-36 font-bold text-white bg-blue-500 hover:bg-blue-700'
               onClick={() => setHideCreateForm(false)}
             >
               Get Started
@@ -104,7 +109,7 @@ const HeroSection: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <form>
-                  <div className='grid w-full items-center gap-4'>
+                  <div className='grid gap-4 items-center w-full'>
                     <div className='flex flex-col space-y-1.5'>
                       <Label htmlFor='name'>Name</Label>
                       <Input

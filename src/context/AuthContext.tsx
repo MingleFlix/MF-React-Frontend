@@ -3,6 +3,11 @@ import { createContext, FC, ReactNode, useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
+/*
+ * Author: Jesse Günzl
+ * Matrikelnummer: 2577166
+ */
+
 interface AuthContextType {
   auth: AuthData | null;
   login: (token: string) => void;

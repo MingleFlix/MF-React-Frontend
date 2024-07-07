@@ -3,6 +3,11 @@ import { PlayerEvent } from '@/types/events';
 import React, { useState, useContext } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 const AddVideoInput: React.FC<{ roomId: string }> = ({ roomId }) => {
   // Auth
   const authContext = useContext(AuthContext);

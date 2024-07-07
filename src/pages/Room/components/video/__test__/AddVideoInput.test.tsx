@@ -4,6 +4,11 @@ import useWebSocket from 'react-use-websocket';
 import AddVideoInput from '../AddVideoInput';
 import '@testing-library/jest-dom';
 
+/*
+ * Author: Alexandre Kaul
+ * Matrikelnummer: 2552912
+ */
+
 // Mock the useWebSocket hook
 jest.mock('react-use-websocket', () => ({
   __esModule: true,
