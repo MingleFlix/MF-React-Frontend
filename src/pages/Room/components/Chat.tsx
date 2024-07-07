@@ -125,7 +125,7 @@ export function Chat({ roomId }: ChatProps) {
           const ts = new Date(message.timestamp);
           return (
             <div
-              className='flex flex-col p-2 rounded-lg bg-neutral-800'
+              className='flex flex-col p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700'
               key={index}
             >
               <div className='flex gap-1 text-xs font-bold text-gray-400'>
@@ -162,7 +162,7 @@ export function Chat({ roomId }: ChatProps) {
         />
         <button
           type='button'
-          className='p-1 text-white bg-neutral-700'
+          className='p-1 text-white bg-neutral-700 hover:bg-neutral-600'
           onClick={sendMessage}
         >
           Send

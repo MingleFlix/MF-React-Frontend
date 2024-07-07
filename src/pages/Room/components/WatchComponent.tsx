@@ -5,8 +5,8 @@ import { Chat } from '@/pages/Room/components/Chat.tsx';
 
 export function WatchComponent(props: { roomId: string }) {
   return (
-    <section id='about' className='h-[95vh]' style={{ padding: '20px 50px' }}>
-      <div className='h-[90vh] pt-[65px]'>
+    <section id='about' className='h-[95vh]' style={{ padding: '0px 50px' }}>
+      <div className='h-[90vh] '>
         <div className='flex flex-col gap-5 justify-center'>
           <div className='flex gap-5'>
             <div className='flex-1 max-w-[100%] xl:max-w-[90%] 2xl:max-w-[70%] min-w-[50%]'>

@@ -83,39 +83,44 @@ export function RoomSocket({
 
   return (
     <>
-      <h1>Room: {room?.name ?? 'loading...'}</h1>
-      <div id='room-actions'>
+      <div className='grid justify-center grid-col pt-[20px]'>
         <div
-          id='debug'
-          className='flex gap-2 justify-center content-center items-center'
+          id='room-actions'
+          className={`relative bg-[#292929] border-b-[2px] rounded-lg ${readyState !== ReadyState.OPEN ? 'border-red-600 hover:border-red-400' : 'border-sky-600 hover:border-sky-400'}`}
         >
-          <button onClick={handleClickSendMessage}>Send Message</button>
-          <span>Connection status: {connectionStatus}</span>
+          <h1 className='p-4 text-4xl text-gray-400'>
+            Room: {room?.name ?? 'loading...'}
+          </h1>
+          {/* <div
+            id='debug'
+            className='flex gap-2 justify-center content-center items-center'
+          >
+            <button onClick={handleClickSendMessage}>Send Message</button>
+            <span>Connection status: {connectionStatus}</span>
+          </div> */}
         </div>
         <div id='users'>
-          <Heading>Users</Heading>
+          <Heading className='pt-2 text-gray-400'>Users</Heading>
           <div
             id='user-list'
-            className=' p-2 gap-2 items-center w-full justify-center flex'
+            className='flex gap-2 justify-center items-center p-2 w-full bg-transparent rounded-lg'
           >
             {room?.users.map(user => (
-              <Card key={user.id} className='w-32'>
-                <CardHeader>
-                  <CardTitle>{user.name}</CardTitle>
+              <Card
+                key={user.id}
+                className='w-32 border-0  bg-[#292929] hover:bg-neutral-700 '
+              >
+                <CardHeader className='pt-4 pb-4'>
+                  <CardTitle className='text-base text-gray-400'>
+                    {user.name}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className='flex flex-col items-center '>
-                  <img
-                    src={userPlaceholder}
-                    width={56}
-                    alt='user profile picture'
-                  />
-                </CardContent>
               </Card>
             ))}
           </div>
         </div>
       </div>
-      <div id='room-content'>
+      <div id='room-content' className='flex justify-center'>
         {<WatchComponent roomId={roomId}></WatchComponent>}
       </div>
     </>
