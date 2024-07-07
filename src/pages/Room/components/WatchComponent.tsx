@@ -12,11 +12,11 @@ export function WatchComponent(props: { roomId: string }) {
             <div className='flex-1 max-w-[100%] xl:max-w-[90%] 2xl:max-w-[70%] min-w-[50%]'>
               <PlyrPlayerComponent roomId={props.roomId} />
             </div>
-            <Chat roomId={props.roomId} />
-          </div>
-          <div className='flex flex-col ml-4'>
-            <AddVideoInput roomId={props.roomId}></AddVideoInput>
-            <VideoQueueComponent roomId={props.roomId}></VideoQueueComponent>
+            <div className='flex flex-col'>
+              <Chat roomId={props.roomId} />
+              <AddVideoInput roomId={props.roomId} />
+              <VideoQueueComponent roomId={props.roomId} />
+            </div>
           </div>
         </div>
       </div>

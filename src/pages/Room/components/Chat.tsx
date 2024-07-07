@@ -114,29 +114,34 @@ export function Chat({ roomId }: ChatProps) {
   }, [messages]);
 
   return (
-    <div className='flex flex-col p-2 min-w-[20rem] max-w-[20rem] bg-gray-800 gap-2 text-left'>
+    <div
+      className={`flex rounded-lg flex-col p-2 min-w-[20rem] 2xl:w-[450px] border-b-[2px] mb-6 bg-[#292929] gap-2 text-left ${readyState !== ReadyState.OPEN ? 'border-red-600 hover:border-red-400' : 'border-sky-600 hover:border-sky-400'}`}
+    >
       <div
-        className='flex flex-col gap-1 h-[20rem] p-1 overflow-y-auto'
+        className='flex flex-col gap-1 h-[20rem] p-1 overflow-y-auto bg-neutral-950/50  rounded-lg'
         ref={messageContainerRef}
       >
         {messages.map((message, index) => {
           const ts = new Date(message.timestamp);
           return (
-            <div className='flex flex-col bg-gray-600 p-2' key={index}>
-              <div className='flex gap-1 text-xs text-gray-400 font-bold'>
+            <div
+              className='flex flex-col p-2 rounded-lg bg-neutral-800'
+              key={index}
+            >
+              <div className='flex gap-1 text-xs font-bold text-gray-400'>
                 <span>{`${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`}</span>
               </div>
               {message.type === 'system' && (
-                <div className='break-all'>
-                  <span className='text-gray-300 font-bold text-xs text-green-600'>
+                <div className='text-gray-400 break-all'>
+                  <span className='text-xs font-bold text-green-600'>
                     System
                   </span>{' '}
                   {message.message}
                 </div>
               )}
               {message.type === 'broadcast' && (
-                <div className='break-all'>
-                  <span className='text-gray-300 font-bold text-xs'>
+                <div className='text-gray-400 break-all'>
+                  <span className='text-xs font-bold text-gray-300'>
                     @{message.name}
                   </span>{' '}
                   {message.message}
@@ -149,12 +154,17 @@ export function Chat({ roomId }: ChatProps) {
       <div className='flex flex-col gap-2'>
         <input
           type='text'
-          className='border-gray-600 bg-gray-700 h-[2.5rem] px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-[#646cff] focus:ring-offset-transparent'
+          className='rounded bg-neutral-900 h-[2.5rem] px-2 py-1 w-full focus:outline-none text-white/80'
           multiple
           value={input}
+          placeholder='Type message here...'
           onChange={e => setInput(e.target.value)}
         />
-        <button type='button' className='p-1' onClick={sendMessage}>
+        <button
+          type='button'
+          className='p-1 text-white bg-neutral-700'
+          onClick={sendMessage}
+        >
           Send
         </button>
       </div>
