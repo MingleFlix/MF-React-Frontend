@@ -118,7 +118,7 @@ export function VideoSocket({
     // @ts-ignore
     const player = window.player as Plyr;
     if (player instanceof Plyr) {
-      if (firstEventRef == null) {
+      if (firstEventRef.current == null) {
         return;
       }
 
