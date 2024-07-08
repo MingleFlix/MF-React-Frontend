@@ -56,6 +56,25 @@ test('End-to-End Test', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await expect(page.locator('#room-page')).toContainText('Room: test-room');
 
+  // Users List
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible();
+  await expect(
+    page
+      .locator('div')
+      .filter({ hasText: /^test$/ })
+      .nth(2),
+  ).toBeVisible();
+
+  // Chat
+  await expect(page.getByText('System Connecting.')).toBeVisible();
+  await expect(page.getByText('System Connected.')).toBeVisible();
+  await expect(page.getByPlaceholder('Type message here...')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
+  await page.getByPlaceholder('Type message here...').click();
+  await page.getByPlaceholder('Type message here...').fill('example message');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText('@test example message')).toBeVisible();
+
   // Play Video
   await expect(page.locator('.plyr__poster')).toBeVisible();
   await expect(page.getByLabel('Play')).toBeVisible();
