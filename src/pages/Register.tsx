@@ -1,18 +1,21 @@
 import React from 'react';
+import z from 'zod';
 
 /*
  * Author: Alexandre Kaul
  * Matrikelnummer: 2552912
  */
 
-interface FormData {
-  username: string;
-  email: string;
-  password: string;
-}
+const UserCreateSchema = z.object({
+  username: z.string(),
+  email: z.string(),
+  password: z.string(),
+});
+
+type UserCreateType = z.infer<typeof UserCreateSchema>;
 
 export function Register() {
-  const [formData, setFormData] = React.useState<FormData>({
+  const [formData, setFormData] = React.useState<UserCreateType>({
     username: '',
     email: '',
     password: '',
